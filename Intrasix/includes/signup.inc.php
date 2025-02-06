@@ -1,5 +1,5 @@
 <?php
-require_once 'dbh.inc.php';
+require_once 'dbh.php';
 require_once 'functions.inc.php';
 
 if(isset($_POST["submit"])){
@@ -13,7 +13,7 @@ if(isset($_POST["submit"])){
 
     if(isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])){
         
-        $secretKey= '6LcxGWsqAAAAAKj2oOYMWaEHH3nGwAg2BY3vqCaX';
+        $secretKey= '6LcbHM8qAAAAADjudJJyldZ8JfXXAXm697OW-pdO';
         $verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$secretKey.'&response='.($_POST['g-recaptcha-response']));
         $response = json_decode($verifyResponse);
 

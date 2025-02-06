@@ -33,13 +33,9 @@ function invalidGender($gender){
     }
 }
 function invalidName($name){
-    if(!preg_match("/^[a-zA-Z0-9]*$/",$name)){
-        $result=true;
+    if (!preg_match("/^[a-zA-Z ]{2,50}$/", $name)) {
+        die("Error: Name must contain only letters and spaces (2-50 characters)!");
     }
-    else{
-        $result=false;
-    }
-    return $result;
 }
 function invalidEmail($email){
     if(!filter_var($email,FILTER_VALIDATE_EMAIL)){

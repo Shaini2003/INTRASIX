@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="css/vender/main.css">
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>
+         function enableSubmitBtn(){
+            document.getElementById("mySubmitBtn").disabled = false;
+        }
+    </script>
 </head>
 
 <body>
@@ -82,8 +87,8 @@
                         </div>
 
                        
-                        <div class="g-recaptcha" data-sitekey="6LcbHM8qAAAAAEEgTTw3LaoT9o1fp5WeqTOnAB00"></div>
-                        <button  name="submit" type="submit" class="log_btn" style="background-color: #8e44ad;">
+                        <div class="g-recaptcha" data-sitekey="6LcbHM8qAAAAAEEgTTw3LaoT9o1fp5WeqTOnAB00"  data-callback="enableSubmitBtn"></div>
+                        <button  name="submit" id="mySubmitBtn" disabled="disabled" type="submit" class="log_btn" style="background-color: #8e44ad;">
                             CREATE
                         </button>
                     </a>
