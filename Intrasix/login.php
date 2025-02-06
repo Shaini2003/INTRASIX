@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intrasix</title>
-    <link rel="icon" href="images/wink.png" type="image/png" sizes="16x16">  
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+	<title>Intrasix</title>
+    <link rel="icon" href="images/wink.png" type="image/png" sizes="16x16"> 
+    
     <link rel="stylesheet" href="css/main.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/color.css">
@@ -15,7 +17,8 @@
 	<link rel="stylesheet" href="css/vender/main.css">
 </head>
 <body>
-    <div class="container">
+
+	<div class="container">
         <div class="login">
             <div class="images d-none d-lg-block">
                 <div class="frame">
@@ -41,48 +44,49 @@
                 </div>
             </div>
             <div class="content">
-                <h1 style="text-align: center;color: #8e44ad; font-family:Verdana, Geneva, Tahoma, sans-serif;">CREATE A ACCOUNT</h1>
+				<h1 style="text-align: center;color: #8e44ad; font-family:Verdana, Geneva, Tahoma, sans-serif;">LOGIN</h1>
                 <div class="log-on border_insc">
-                    <form action="" method="post">
+                  
+                    <form>
                         <div>
-                            <input type="email" name="email" id="emai" placeholder="email address">
-                        </div>
-                        <div>
-                            <input type="text" name="name" id="name" placeholder="Full Name">
-                        </div>
-                        <div>
-                            <input type="text" name="username" id="username" placeholder="Username">
+                            <input type="email" name="email" id="emai" placeholder="e-mail">
                         </div>
                         <div>
                             <input type="password" name="password" id="password" placeholder="password">
                         </div>
                         
-                        
                     </form>
-                    <a href="./home.html" style="color: #8e44ad; font-weight: bold;">
+                    <a href="./home.html">
                         <button class="log_btn" style="background-color: #8e44ad;">
-                                Sign Up
+                            Log in
                         </button>
                     </a>
+                    <div class="other-ways">
+                        
+                        <div class="forget-password">
+                            <a href="#" style="color: #8e44ad; font-weight: bold;">
+                                Forgot password?
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="sing-in border_insc">
-                    <p style="text-align: center;font-weight: bold">Already Have an account? 
-                        <a href="login.html" style="color: #8e44ad; font-weight: bold;">Login</a>
+                <div class="sing-up border_insc">
+                    <p style="font-weight: bold;">
+                        Don't have an account? 
+                        <a href="signup.php"style="color: #8e44ad;">Sign up</a>
                     </p>
                 </div>
                 
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js" integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js" integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ" crossorigin="anonymous"></script>
-    <script data-cfasync="false" src="../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/main.min.js"></script>
+	
+	<script data-cfasync="false" src="../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/main.min.js"></script>
 	<script src="js/script.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js" integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js" integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ" crossorigin="anonymous"></script>
        
 
-   
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script> -->
-</body>
+</body>	
+
 </html>

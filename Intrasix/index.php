@@ -45,8 +45,8 @@
 					<li>
 						<a href="#" title="">Home</a>
 						<ul>
-							<li><a href="login.html" title="">Login page</a></li>
-							<li><a href="logout.html" title="">Logout Page</a></li>
+							<li><a href="login.php" title="">Login page</a></li>
+							<li><a href="logout.php" title="">Logout Page</a></li>
 
 						</ul>
 					</li>
@@ -126,7 +126,7 @@
 									<span class="tag">New</span>
 								</li>
 							</ul>
-							<a href="notifications.html" title="" class="more-mesg">view more</a>
+							<a href="notifications.php" title="" class="more-mesg">view more</a>
 						</div>
 					</li>
 					<li>
