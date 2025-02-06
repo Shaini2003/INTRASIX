@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="css/vender/bootstrap.css">
     <link rel="stylesheet" href="css/vender/bootstrap.min.css">
     <link rel="stylesheet" href="css/vender/main.css">
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -79,7 +81,8 @@
                             <input type="text" name="town" id="town" placeholder="Town" required>
                         </div>
 
-                        <a href="index.php" style="color: #8e44ad; font-weight: bold;">
+                       
+                        <div class="g-recaptcha" data-sitekey="6LcbHM8qAAAAAEEgTTw3LaoT9o1fp5WeqTOnAB00"></div>
                         <button  name="submit" type="submit" class="log_btn" style="background-color: #8e44ad;">
                             CREATE
                         </button>
@@ -87,7 +90,7 @@
                     </form>
              
                    
-                  
+                    <a href="index.php" style="color: #8e44ad; font-weight: bold;">
                         <p style="text-align: center;font-weight: bold">Already Have an account?
                             <a href="login.php" style="color: #8e44ad; font-weight: bold;">Login</a>
                         </p>
