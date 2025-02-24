@@ -2,80 +2,66 @@
 require_once 'dbh.php';
 require_once 'functions.inc.php';
 
-if(isset($_POST["submit"])){
-    $name=$_POST["name"];
-    $email = $_POST["email"];
-    $dob = $_POST["dob"];
-    $gender = $_POST["gender"];
+if (isset($_POST["submit"])) {
+    $name = trim($_POST["name"]);
+    $email = trim($_POST["email"]);
+    $dob = trim($_POST["dob"]);
+    $gender = trim($_POST["gender"]);
     $pwd = $_POST["password"];
-    $pwdRepeat =$_POST["confirm_password"];
-    $town =$_POST["town"];
+    $pwdRepeat = $_POST["confirm_password"];
+    $town = trim($_POST["town"]);
 
-    if(isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])){
-        
-        $secretKey= '6LcbHM8qAAAAADjudJJyldZ8JfXXAXm697OW-pdO';
-        $verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$secretKey.'&response='.($_POST['g-recaptcha-response']));
+    if (isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])) {
+        $secretKey = '6LcbHM8qAAAAADjudJJyldZ8JfXXAXm697OW-pdO';
+        $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=" . $_POST['g-recaptcha-response']);
         $response = json_decode($verifyResponse);
 
-    
-        $emptyInput =emptyInputSignup($name,$email,$dob,$gender,$pwd,$pwdRepeat,$town);
-        $invalidUid = invalidUid($email);
-        $invalidName = invalidName($name);
-        $invalidEmail=invalidEmail($email);
-        $invalidDob=invalidDOB($dob);
-        $invalidGender =invalidGender($gender);
-        $invalidTown = invalidTown($town);
-        $invalidPwdMatch = pwdMatch($pwd , $pwdRepeat);
-        $invalidUidExists =uidExists($conn,$name,$email);
-    
-        if ($emptyInput !== false){
-            header("Location:../signup.php?error=emptyinput");
+        if (!$response->success) {
+            header("Location: ../signup.php?error=recaptcha_failed");
             exit();
         }
-        if ($invalidUid !== false){
-            header("Location:../signup.php?error=invaliduid");
+
+        // Validation
+        if (emptyInputSignup($name, $email, $dob, $gender, $pwd, $pwdRepeat, $town)) {
+            header("Location: ../signup.php?error=emptyinput");
             exit();
         }
-        if($invalidEmail !== false){
-            header("Location:../signup.php?error=invalidemail");
+        if (invalidUid($email)) {
+            header("Location: ../signup.php?error=invalidemail");
             exit();
         }
-       
-        if($invalidName !== false){
-            header("Location:../signup.php?error=invalidname");
+        if (invalidName($name)) {
+            header("Location: ../signup.php?error=invalidname");
             exit();
         }
-        if($invalidDob !== false){
-            header("Location:../signup.php?error=invaliddob");
+        if (invalidDOB($dob)) {
+            header("Location: ../signup.php?error=invaliddob");
             exit();
         }
-        if($invalidGender !== false){
-            header("Location:../signup.php?error=invalidgender");
+        if (invalidGender($gender)) {
+            header("Location: ../signup.php?error=invalidgender");
             exit();
         }
-        if($invalidTown !== false){
-            header("Location:../signup.php?error=invalidtown");
+        if (invalidTown($town)) {
+            header("Location: ../signup.php?error=invalidtown");
             exit();
         }
-        
-        if ($pwdMatch !== false){
-            header("Location:../signup.php?error=passwordsdontmatch");
+        if (pwdMatch($pwd, $pwdRepeat)) {
+            header("Location: ../signup.php?error=passwordsdontmatch");
             exit();
         }
-       
-        if ($uidExists !== false){
-            header("Location:../signup.php?error=emailtaken");
+        if (uidExists($conn, $name, $email)) {
+            header("Location: ../signup.php?error=emailtaken");
             exit();
         }
-    createUser($conn,$name,$email,$dob,$gender,$pwd,$town);
-    
+
+        createUser($conn, $name, $email, $dob, $gender, $pwd, $town);
+    } else {
+        header("Location: ../signup.php?error=recaptcha_missing");
+        exit();
     }
-    else{
-        $_SESSION['status'] = "Error in recapcha verification";
-        header("Location: {$_SERVER["HTTP_REFERER"]}");
-        exit(0);
-    }
-    }
-    else{
-        header('location:../login.php');
-    }
+} else {
+    header("Location: ../login.php");
+    exit();
+}
+?>

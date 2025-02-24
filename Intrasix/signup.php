@@ -17,7 +17,7 @@
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-         function enableSubmitBtn(){
+        function enableSubmitBtn() {
             document.getElementById("mySubmitBtn").disabled = false;
         }
     </script>
@@ -53,7 +53,7 @@
                 <h1 style="text-align: center;color: #8e44ad; font-family:Verdana, Geneva, Tahoma, sans-serif;">CREATE A
                     ACCOUNT</h1>
                 <div class="log-on border_insc">
-                    <form action="includes/signup.inc.php" method="post">
+                <form action="includes/signup.inc.php" method="post">
                         <div>
                             <label for="dob">Full Name:</label>
                             <input type="text" name="name" id="name" placeholder="Full Name">
@@ -93,20 +93,19 @@
                         </button>
                     </a>
                     </form>
-             
-                   
+
                     <a href="index.php" style="color: #8e44ad; font-weight: bold;">
                         <p style="text-align: center;font-weight: bold">Already Have an account?
                             <a href="login.php" style="color: #8e44ad; font-weight: bold;">Login</a>
                         </p>
-                    
+
                 </div>
-                
+
 
             </div>
         </div>
     </div>
-   
+
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"
         integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE"
         crossorigin="anonymous"></script>
