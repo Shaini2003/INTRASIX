@@ -47,20 +47,16 @@
 				<h1 style="text-align: center;color: #8e44ad; font-family:Verdana, Geneva, Tahoma, sans-serif;">LOGIN</h1>
                 <div class="log-on border_insc">
                   
-                    <form>
+                    <form action="includes/login.inc.php" method="post">
                         <div>
                             <input type="email" name="email" id="emai" placeholder="e-mail">
                         </div>
                         <div>
                             <input type="password" name="password" id="password" placeholder="password">
                         </div>
-                        
+                        <button type="submit" name="submit" class="log_btn" style="background-color: #8e44ad;">LOGIN</button>
                     </form>
-                    <a href="./home.html">
-                        <button class="log_btn" style="background-color: #8e44ad;">
-                            Log in
-                        </button>
-                    </a>
+                    
                     <div class="other-ways">
                         
                         <div class="forget-password">

@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,17 +24,13 @@
 
 	<div class="theme-layout">
 		<div class="responsive-header">
-			
+
 
 			<div class="search-bar">
 				<i class="uil uil-search"></i>
 				<input type="search" placeholder="search" style="border: none;">
 			</div>
-			<nav id="menu" class="res-menu">
-				<ul>
-					<li><span>Home</span></li>
-				</ul>
-			</nav>
+
 
 		</div><!-- responsive header -->
 
@@ -41,16 +40,16 @@
 			</div>
 
 			<div class="top-area">
-				<ul class="main-menu">
-					<li>
-						<a href="#" title="">Home</a>
-						<ul>
-							<li><a href="login.php" title="">Login page</a></li>
-							<li><a href="logout.php" title="">Logout Page</a></li>
+			<ul class="main-menu">
+            
 
-						</ul>
-					</li>
-				</ul>
+            <?php if (isset($_SESSION["id"])): ?>
+                <li><a href="profile.php" title="View Profile"><?php echo $_SESSION['name']; ?></a></li>
+                <li><a href="logout.php" title="Logout">Logout</a></li>
+            <?php else: ?>
+                <li><a href="login.php" title="Login">Login</a></li>
+            <?php endif; ?>
+        </ul>
 
 				<ul>
 					<li>
