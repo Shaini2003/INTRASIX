@@ -40,16 +40,16 @@ session_start();
 			</div>
 
 			<div class="top-area">
-			<ul class="main-menu">
-            
+				<ul class="main-menu">
 
-            <?php if (isset($_SESSION["id"])): ?>
-                <li><a href="profile.php" title="View Profile"><?php echo $_SESSION['name']; ?></a></li>
-                <li><a href="logout.php" title="Logout">Logout</a></li>
-            <?php else: ?>
-                <li><a href="login.php" title="Login">Login</a></li>
-            <?php endif; ?>
-        </ul>
+
+					<?php if (isset($_SESSION["id"])): ?>
+						<li><a href="profile.php" title="View Profile"><?php echo $_SESSION['name']; ?></a></li>
+						<li><a href="logout.php" title="Logout">Logout</a></li>
+					<?php else: ?>
+						<li><a href="login.php" title="Login">Login</a></li>
+					<?php endif; ?>
+				</ul>
 
 				<ul>
 					<li>
@@ -213,7 +213,7 @@ session_start();
 			padding: 20px;
 			justify-content: center;">
 				<div class="story" style=" text-align: center;">
-					<img src="images/p1.jpg" alt="Zineb" style="width: 70px;
+					<img src="images/shaini.jpg" alt="Zineb" style="width: 70px;
 					height: 70px;
 					border-radius: 50%;
 					border: 3px solid white;
@@ -222,7 +222,7 @@ session_start();
 					<div class="story-name">Shaini</div>
 				</div>
 				<div class="story" style=" text-align: center;">
-					<img src="images/profile.jpg" alt="Ikram" style="width: 70px;
+					<img src="images/tarshi.jpg" alt="Ikram" style="width: 70px;
 					height: 70px;
 					border-radius: 50%;
 					border: 3px solid white;
@@ -240,7 +240,7 @@ session_start();
 					<div class="story-name">Devindi</div>
 				</div>
 				<div class="story" style=" text-align: center;">
-					<img src="images/p2.jpg" alt="Amal" style="width: 70px;
+					<img src="images/dilki.jpg" alt="Amal" style="width: 70px;
 					height: 70px;
 					border-radius: 50%;
 					border: 3px solid white;
@@ -251,7 +251,7 @@ session_start();
 					color: #333;">Dilki</div>
 				</div>
 				<div class="story" style=" text-align: center;">
-					<img src="images/p3.jpg" alt="Amine" style="width: 70px;
+					<img src="images/amesha.jpg" alt="Amine" style="width: 70px;
 					height: 70px;
 					border-radius: 50%;
 					border: 3px solid white;
@@ -273,7 +273,7 @@ session_start();
 					color: #333;">Thusara</div>
 				</div>
 				<div class="story" style=" text-align: center;">
-					<img src="images/p4.jpg" alt="Loy" style="width: 70px;
+					<img src="images/navee.jpg" alt="Loy" style="width: 70px;
 					height: 70px;
 					border-radius: 50%;
 					border: 3px solid white;
@@ -281,7 +281,7 @@ session_start();
 					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
 					<div class="story-name" style=" margin-top: 5px;
 					font-size: 14px;
-					color: #333;">Lithu</div>
+					color: #333;">Naveesha</div>
 				</div>
 			</div>
 			<div class="gap gray-bg">
