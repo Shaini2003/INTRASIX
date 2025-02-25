@@ -82,7 +82,7 @@
                                 <input type="password" name="confirm_password" id="confirm_password" placeholder="confirm_password">
                             </div>
                         <div>
-                            <label for="dob">Town:</label>
+                            <label for="dob">District:</label>
                             <input type="text" name="town" id="town" placeholder="Town" required>
                         </div>
 
