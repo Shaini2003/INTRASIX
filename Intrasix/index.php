@@ -1,12 +1,25 @@
 <?php
 session_start();
+include 'includes/dbh.php'; // Include database connection
 
-// Check if user is logged in
 if (!isset($_SESSION['id'])) {
-    header("Location: login.php"); // Redirect to login page if not logged in
-    exit();
+	header("Location: otp.php"); // Redirect to OTP page if not logged in
+	exit();
 }
+
+$id = $_SESSION['id'];
+
+// Fetch user data from database
+$stmt = $conn->prepare("SELECT name, profile_pic FROM users WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+$stmt->close();
+$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,6 +38,25 @@ if (!isset($_SESSION['id'])) {
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
 </head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $(".user-img").click(function(event) {
+        $(".user-setting").toggle(); // Toggle dropdown
+        event.stopPropagation(); // Prevents event bubbling
+    });
+
+    // Close dropdown if clicking outside
+    $(document).click(function() {
+        $(".user-setting").hide();
+    });
+
+    // Prevent dropdown from closing when clicking inside
+    $(".user-setting").click(function(event) {
+        event.stopPropagation();
+    });
+});
+</script>
 
 <body>
 
@@ -50,7 +82,7 @@ if (!isset($_SESSION['id'])) {
 
 
 					<?php if (isset($_SESSION["id"])): ?>
-						<li><a href="profile.php" title="View Profile"><?php echo $_SESSION['name']; ?></a></li>
+						<li><a href="view_profile.php" title="View Profile"><?php echo $_SESSION['name'];?></a></li>
 						<li><a href="logout.php" title="Logout">Logout</a></li>
 					<?php else: ?>
 						<li><a href="login.php" title="Login">Login</a></li>
@@ -200,15 +232,7 @@ if (!isset($_SESSION['id'])) {
 					</li>
 
 				</ul>
-				<div class="user-img">
-					<img src="images/resources/admin.jpg" alt="">
-					<span class="status f-online"></span>
-					<div class="user-setting">
-						<a href="#" title=""><i class="ti-user"></i> view profile</a>
-						<a href="#" title=""><i class="ti-pencil-alt"></i>edit profile</a>
-						<a href="#" title=""><i class="ti-power-off"></i>log out</a>
-					</div>
-				</div>
+				
 				<span class="ti-menu main-menu" data-ripple=""></span>
 			</div>
 		</div><!-- topbar -->
