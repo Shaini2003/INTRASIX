@@ -1,29 +1,33 @@
 <?php
 session_start();
-include("includes/dbh.php");
-include("email.php");
+include("includes/dbh.php"); // Database connection
+include("email.php"); // Email sending function
 
 if (isset($_POST["user_email"]) && !empty($_POST["user_email"])) {
-    $email = mysqli_real_escape_string($conn, $_POST["user_email"]); // Prevent SQL Injection
+    $email = mysqli_real_escape_string($conn, $_POST["user_email"]);
 
-    // Check if email exists in the database
+    // Check if email exists
     $sql = "SELECT * FROM users WHERE email='$email'";
-    $rs = mysqli_query($conn, $sql) or die(mysqli_error($conn));
+    $rs = mysqli_query($conn, $sql);
 
     if (mysqli_num_rows($rs) > 0) {
         $otp = rand(11111, 99999); // Generate OTP
-        send_otp($email,"PHP OTP LOGIN",$otp);
 
-        // Update OTP in database
-        $sql = "UPDATE users SET user_otp='$otp' WHERE email='$email'";
-        $rs = mysqli_query($conn, $sql) or die(mysqli_error($conn));
+        // Send OTP email first
+        if (send_otp($email, "INTRASIX OTP LOGIN", $otp)) {
+            $_SESSION['email'] = $email; // 🔹 Store email for verification
+            // If email sent successfully, update OTP in database
+            $sql = "UPDATE users SET user_otp='$otp' WHERE email='$email'";
+            mysqli_query($conn, $sql);
 
-        // Redirect with success message
-        header("location: verify.php?msg=OTP Sent Successfully!");
-        exit();
+            header("location: verify.php?msg=OTP Sent Successfully!");
+            exit();
+        } else {
+            header("location: otp.php?msg=Failed to send OTP. Try again!");
+            exit();
+        }
     } else {
-        // Redirect with error message
-        header("location: otp.php?msg=Email ID is invalid. Please check again!");
+        header("location: otp.php?msg=Invalid Email ID. Please check again!");
         exit();
     }
 } else {

@@ -1,40 +1,46 @@
 <?php
+
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-//Load Composer's autoloader
+// Load Composer's autoloader
 require 'vendor/autoload.php';
 
-function send_otp($to,$subject,$content){
+function send_otp($to, $subject, $otp) {
+  $mail = new PHPMailer(true);
 
-//Create an instance; passing `true` enables exceptions
-$mail = new PHPMailer(true);
+  try {
+      // Enable debugging
+      $mail->SMTPDebug = 2; // Use 2 for debugging (0 in production)
+      $mail->isSMTP();
+      $mail->Host       = 'smtp.gmail.com';
+      $mail->SMTPAuth   = true;
+      $mail->Username   = 'shinitharushika2020@gmail.com'; 
+      $mail->Password   = 'isfl knln mtbj yhqt'; // Use an App Password, NOT your Gmail password
+      $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+      $mail->Port       = 587;
 
-try {
-    //Server settings
-   // $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
-    $mail->isSMTP();                                            //Send using SMTP
-    $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
-    $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-    $mail->Username   = 'shinitharushika2020@gmail.com';                     //SMTP username
-    $mail->Password   = 'HaR#s2020';                               //SMTP password
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-    $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+      // Recipients
+      $mail->setFrom('shinitharushika2020@gmail.com', 'OTP Verification');
+      $mail->addAddress($to);
 
-    //Recipients
-    $mail->setFrom('shinitharushika2020@gmail.com', 'OTP For Login');
-    $mail->addAddress($to, 'Verify Email');     //Add a recipient
-  // $mail->addAttachment('./iics.txt');
-    //Content
-    $mail->isHTML(true);                                  //Set email format to HTML
-    $mail->Subject = $subject;
-    $mail->Body =$content;
-   
+      // Email Content
+      $mail->isHTML(true);
+      $mail->Subject = $subject;
+      $mail->Body    = "<h3>Your OTP Code: <strong>$otp</strong></h3>";
 
-    $mail->send();
-    echo 'OTP has been send successfully';
-} catch (Exception $e) {
-    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+      // Send Email
+      if ($mail->send()) {
+          return true;
+      } else {
+          echo "Mailer Error: " . $mail->ErrorInfo; // Show error message
+          return false;
+      }
+  } catch (Exception $e) {
+      echo "Exception Error: " . $mail->ErrorInfo; // Show error message
+      return false;
+  }
 }
 
-}
+?>
