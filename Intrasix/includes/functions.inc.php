@@ -75,7 +75,7 @@ function loginUser($conn, $email, $pwd) {
     $_SESSION["id"] = $uidExists["id"];
     $_SESSION["email"] = $uidExists["email"];
     $_SESSION['name'] = $uidExists["name"];
-    header("Location: ../index.php");
+    header("Location: ../otp.php");
     exit();
 }
 ?>
