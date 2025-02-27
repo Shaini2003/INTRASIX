@@ -11,15 +11,6 @@ if (!isset($_SESSION['id'])) {
 
 $id = $_SESSION['id'];
 
-// Fetch user data from database
-$stmt = $conn->prepare("SELECT name, profile_pic FROM users WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-
-$stmt->close();
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -444,7 +435,7 @@ $conn->close();
 												<div class="user-post">
 													<div class="friend-info">
 														<figure>
-															<img src="images/<?php echo htmlspecialchars($post['profile_pic']); ?>" alt="Profile Picture">
+														<img src="<?php echo $_SERVER['DOCUMENT_ROOT']; ?>/images/<?php echo htmlspecialchars($post['profile_pic']); ?>" alt="Profile Picture">
 														</figure>
 														<div class="friend-name">
 															<ins>
@@ -456,7 +447,7 @@ $conn->close();
 														</div>
 														<div class="post-meta">
 															<?php if (!empty($post['post_img'])): ?>
-																<img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post Image">
+																<img src="<?php echo $_SERVER['DOCUMENT_ROOT']; ?>/images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post Image">
 															<?php endif; ?>
 															<p><?php echo nl2br(htmlspecialchars($post['post_text'])); ?></p>
 															<div class="we-video-info">
@@ -488,6 +479,7 @@ $conn->close();
 										<?php endforeach; ?>
 									</div>
 								</div>
+
 
 								<div class="col-lg-3">
 									<aside class="sidebar static">
