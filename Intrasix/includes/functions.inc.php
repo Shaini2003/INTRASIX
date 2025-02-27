@@ -78,4 +78,4 @@ function loginUser($conn, $email, $pwd) {
     header("Location: ../otp.php");
     exit();
 }
-?>
+

@@ -38,25 +38,7 @@ $conn->close();
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
 </head>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    $(".user-img").click(function(event) {
-        $(".user-setting").toggle(); // Toggle dropdown
-        event.stopPropagation(); // Prevents event bubbling
-    });
 
-    // Close dropdown if clicking outside
-    $(document).click(function() {
-        $(".user-setting").hide();
-    });
-
-    // Prevent dropdown from closing when clicking inside
-    $(".user-setting").click(function(event) {
-        event.stopPropagation();
-    });
-});
-</script>
 
 <body>
 
@@ -327,13 +309,20 @@ $(document).ready(function() {
 											<ul class="naves">
 												<li>
 													<i class="ti-clipboard"></i>
-													<a href="index.html" title="">News feed</a>
+													<a href="post.php" title="">Create Post</a>
 												</li>
 												<li>
 													<i class="ti-mouse-alt"></i>
 													<a href="inbox.html" title="">Inbox</a>
 												</li>
-
+												<li>
+													<i class="ti-user"></i>
+													<a href="view_profile.php" title="">View Profile</a>
+												</li>
+												<li>
+													<i class="ti-user"></i>
+													<a href="edit_profile.php" title="">Edit Profile</a>
+												</li>
 												<li>
 													<i class="ti-user"></i>
 													<a href="timeline-friends.html" title="">friends</a>
