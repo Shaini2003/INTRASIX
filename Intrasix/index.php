@@ -435,7 +435,7 @@ $id = $_SESSION['id'];
 												<div class="user-post">
 													<div class="friend-info">
 														<figure>
-														<img src="<?php echo $_SERVER['DOCUMENT_ROOT']; ?>/images/<?php echo htmlspecialchars($post['profile_pic']); ?>" alt="Profile Picture">
+															<img src="<?php echo htmlspecialchars($post['profile_pic'] ?? 'default.jpg'); ?>" alt="Profile Picture">
 														</figure>
 														<div class="friend-name">
 															<ins>
@@ -447,7 +447,7 @@ $id = $_SESSION['id'];
 														</div>
 														<div class="post-meta">
 															<?php if (!empty($post['post_img'])): ?>
-																<img src="<?php echo $_SERVER['DOCUMENT_ROOT']; ?>/images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post Image">
+																<img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post Image">
 															<?php endif; ?>
 															<p><?php echo nl2br(htmlspecialchars($post['post_text'])); ?></p>
 															<div class="we-video-info">

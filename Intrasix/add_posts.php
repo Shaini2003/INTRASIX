@@ -59,7 +59,7 @@ function createPost($text, $image) {
     $user_id = $_SESSION['id'];
 
     // Define the image upload path
-    $upload_dir = __DIR__ . "/../images/posts/";
+    $upload_dir = __DIR__ . "/images/posts/";
 
     // Ensure directory exists
     if (!is_dir($upload_dir)) {
