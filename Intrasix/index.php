@@ -29,8 +29,10 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/color.css">
 	<link rel="stylesheet" href="css/responsive.css">
+	<link rel="stylesheet" href="styles.css">
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
 
@@ -80,6 +82,7 @@ $id = $_SESSION['id'];
 						<a href="#" title="Notification" data-ripple="">
 							<i class="ti-bell"></i><span>20</span>
 						</a>
+
 						<div class="dropdowns">
 							<span>4 New Notifications</span>
 							<ul class="drops-menu">
@@ -207,6 +210,7 @@ $id = $_SESSION['id'];
 						</div>
 					</li>
 
+
 				</ul>
 
 				<span class="ti-menu main-menu" data-ripple=""></span>
@@ -214,82 +218,41 @@ $id = $_SESSION['id'];
 		</div><!-- topbar -->
 
 		<section>
-			<div class="stories-container" style="display: flex;
-			gap: 15px;
-			padding: 20px;
-			justify-content: center;">
-				<div class="story" style=" text-align: center;">
-					<img src="images/shaini.jpg" alt="Zineb" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name">Shaini</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/tarshi.jpg" alt="Ikram" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name">Tarshika</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/s1.jpg" alt="Amina" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name">Devindi</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/dilki.jpg" alt="Amal" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name" style=" margin-top: 5px;
-					font-size: 14px;
-					color: #333;">Dilki</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/amesha.jpg" alt="Amine" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name" style=" margin-top: 5px;
-					font-size: 14px;
-					color: #333;">Amesha</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/p4.jpg" alt="Loy" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name" style=" margin-top: 5px;
-					font-size: 14px;
-					color: #333;">Thusara</div>
-				</div>
-				<div class="story" style=" text-align: center;">
-					<img src="images/navee.jpg" alt="Loy" style="width: 70px;
-					height: 70px;
-					border-radius: 50%;
-					border: 3px solid white;
-					object-fit: cover;
-					box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-					<div class="story-name" style=" margin-top: 5px;
-					font-size: 14px;
-					color: #333;">Naveesha</div>
-				</div>
+			<div>
+			<?php
+
+$logged_user_id = $_SESSION['id'];
+$sql = "SELECT stories.story_img, stories.created_at, users.name 
+FROM stories 
+JOIN users ON stories.user_id = users.id 
+ORDER BY stories.created_at DESC";
+
+echo '<div class="story-container">';
+echo '<div class="story upload-story">
+        <form action="upload_story.php" method="post" enctype="multipart/form-data">
+            <label for="storyUpload">
+                <div class="upload-icon">+</div>
+            </label>
+            <input type="file" id="storyUpload" name="story_img" required onchange="this.form.submit();">
+        </form>
+        <div class="story-name">Upload</div>
+      </div>';
+			$result = $conn->query($sql);
+
+			if ($result->num_rows > 0) {
+				while ($row = $result->fetch_assoc()) {
+					echo '<div class="story" style="text-align: center;">
+                <img src="' . $row['story_img'] . '" alt="Story" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
+                <div class="story-name" style="margin-top: 5px; font-size: 14px; color: #333;">' . $row['name'] . '</div>
+              </div>';
+				}
+			} else {
+				echo "<p>No stories found.</p>";
+			}
+			?>
+
 			</div>
+			
 			<div class="gap gray-bg">
 				<div class="container-fluid">
 					<div class="row">
@@ -588,7 +551,7 @@ $id = $_SESSION['id'];
 	<script src="js/map-init.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8c55_YHLvDHGACkQscgbGLtLRdxBDCfI"></script>
 	<script src="js/jquery-3.7.1.min.js"></script>
-
+	<script src="app.js"></script>
 </body>
 
 </html>

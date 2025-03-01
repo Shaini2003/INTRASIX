@@ -1,0 +1,110 @@
+/* Story Container */
+.story-container {
+    display: flex;
+    gap: 50px; /* Space between stories */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap;
+    padding: 10px;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: transparent transparent;
+  
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari) */
+.story-container::-webkit-scrollbar {
+    height: 5px;
+}
+
+.story-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+/* Story Styling */
+.story {
+    text-align: center;
+    min-width: 80px; /* Prevent stories from shrinking */
+}
+
+/* Story Image */
+.story img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Story Name */
+.story-name {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+/* Story Container */
+.story-container {
+    display: flex;
+    gap: 10px; /* Space between stories */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap;
+    padding: 10px;
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari) */
+.story-container::-webkit-scrollbar {
+    height: 5px;
+}
+
+.story-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+/* Story Box */
+.story {
+    text-align: center;
+    min-width: 80px; /* Prevent stories from shrinking */
+    position: relative;
+}
+
+/* Story Image */
+.story img,
+.upload-story label {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Upload Story Button */
+.upload-story label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ccc; /* Default background */
+    cursor: pointer;
+}
+
+/* + Icon */
+.upload-icon {
+    font-size: 30px;
+    font-weight: bold;
+    color: white;
+}
+
+/* Hide default file input */
+.upload-story input {
+    display: none;
+}
+
+/* Story Name */
+.story-name {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap; /* Prevent text wrapping */
+}
