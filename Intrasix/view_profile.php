@@ -72,7 +72,7 @@ if (!$user) {
         <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars($user['dob']); ?></p>
         <p><strong>Gender:</strong> <?php echo htmlspecialchars($user['gender']); ?></p>
         <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
-        <a href="dashboard.php" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="index.php" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 
 </body>

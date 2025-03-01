@@ -79,3 +79,98 @@ function loginUser($conn, $email, $pwd) {
     exit();
 }
 
+
+
+// Function to get user details by username
+function getUserByUsername($username) {
+    global $conn;
+    $query = "SELECT * FROM users WHERE name = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    
+    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    return mysqli_fetch_assoc($result);
+}
+
+// Function to get posts by user ID
+function getPostById($user_id) {
+    global $conn;
+    $query = "SELECT * FROM posts WHERE user_id = ? ORDER BY id DESC";
+    $stmt = mysqli_prepare($conn, $query);
+    
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    return mysqli_fetch_all($result, MYSQLI_ASSOC);
+}
+
+function getFollowSuggestions() {
+    global $conn;
+
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['userdata']['id'])) {
+        return [];
+    }
+
+    $current_user = $_SESSION['userdata']['id'];
+
+    // Secure query using prepared statements
+    $stmt = $conn->prepare("SELECT id, name, profile_pic FROM users WHERE id != ? LIMIT 10");
+    $stmt->bind_param("i", $current_user);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+// Filter follow suggestions
+function filterFollowSuggestion($list) {
+    $filter_list = [];
+    foreach ($list as $user) {
+        if (!checkFollowStatus($user['id'])) {
+            $filter_list[] = $user;
+        }
+    }
+    return $filter_list;
+}
+
+// Check if the user is already followed
+function checkFollowStatus($user_id) {
+    global $conn;
+    
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $current_user = $_SESSION['userdata']['id'];
+
+    $stmt = $conn->prepare("SELECT COUNT(*) AS row FROM follow_list WHERE follower_id = ? AND user_id = ?");
+    $stmt->bind_param("ii", $current_user, $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    return $result['row'] > 0;
+}
+
+// Function to follow a user
+function followUser($user_id) {
+    global $conn;
+    
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $current_user = $_SESSION['userdata']['id'];
+
+    $stmt = $conn->prepare("INSERT INTO follow_list (follower_id, user_id) VALUES (?, ?)");
+    $stmt->bind_param("ii", $current_user, $user_id);
+    return $stmt->execute();
+}
