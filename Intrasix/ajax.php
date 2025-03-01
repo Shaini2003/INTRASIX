@@ -11,7 +11,7 @@ if (isset($_GET['follow'])) {
     }
 
     $user_id = intval($_POST['user_id']);
-    
+
     if ($user_id > 0 && followUser($user_id)) {
         echo json_encode(['status' => true]);
     } else {

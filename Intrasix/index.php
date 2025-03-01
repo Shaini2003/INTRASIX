@@ -346,37 +346,70 @@ $id = $_SESSION['id'];
 										</div><!-- Shortcuts -->
 
 										<div class="widget stick-widget">
-											<h4 class="widget-title">Who's Following</h4>
+											<h4 class="widget-title">Follow Suggest</h4>
 											<ul class="followers">
 												<?php
 												
-
-												// Fetch follow suggestions
-												$follow_suggestions = filterFollowSuggestion(getFollowSuggestions());
-
-												// Check if we have users
-												if (!empty($follow_suggestions)) {
-													foreach ($follow_suggestions as $suser) {
-												?>
-														<li>
-															<figure>
-																<img src="<?php echo htmlspecialchars($suser['profile_pic'] ?? 'default.jpg'); ?>" alt="Profile Picture">
-															</figure>
-															<div class="friend-meta">
-																<h4><a href="profile.php?id=<?= htmlspecialchars($suser['id']) ?>" title=""><?= htmlspecialchars($suser['name']) ?></a></h4>
-																<button class="btn btn-sm btn-primary followbtn" data-user-id='<?= htmlspecialchars($suser['id']) ?>'>Follow</button>
-															</div>
-														</li>
-												<?php
-													}
+												if (!isset($_SESSION['id'])) {
+													echo "<li>Please log in to see follow suggestions.</li>";
 												} else {
-													echo "<li>No follow suggestions available.</li>";
+													// Fetch follow suggestions
+													$follow_suggestions = filterFollowSuggestion(getFollowSuggestions());
+
+													// Display users or a message if no suggestions are available
+													if (!empty($follow_suggestions)) {
+														foreach ($follow_suggestions as $suser) {
+												?>
+															<li>
+																<figure>
+																	<img src="<?php echo htmlspecialchars($suser['profile_pic'] ?? 'default.jpg'); ?>" alt="Profile Picture">
+																</figure>
+																<div class="friend-meta">
+																	<h4>
+																		<a href="profile.php?id=<?= htmlspecialchars($suser['id']) ?>" title=""><?= htmlspecialchars($suser['name']) ?></a>
+																	</h4>
+																	<button class="btn btn-sm btn-primary followbtn" data-user-id='<?= htmlspecialchars($suser['id']) ?>'>Follow</button>
+																</div>
+															</li>
+												<?php
+														}
+													} else {
+														echo "<li>No follow suggestions available.</li>";
+													}
 												}
 												?>
 											</ul>
 										</div>
 
-										
+										<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+										<script>
+											// Follow user AJAX
+											$(".followbtn").click(function() {
+												var user_id_v = $(this).data('user-id');
+												var button = this;
+												$(button).attr('disabled', true);
+
+												$.ajax({
+													url: 'ajax.php?follow',
+													method: 'POST',
+													dataType: 'json',
+													data: {
+														user_id: user_id_v
+													},
+													success: function(response) {
+														if (response.status) {
+															$(button).html('<i class="bi bi-check-circle"></i> Followed');
+														} else {
+															$(button).attr('disabled', false);
+															alert("Failed to follow. Try again.");
+														}
+													}
+												});
+											});
+										</script>
+
+
+
 
 									</aside>
 								</div><!-- sidebar -->
@@ -703,31 +736,7 @@ $id = $_SESSION['id'];
 	<script src="js/map-init.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8c55_YHLvDHGACkQscgbGLtLRdxBDCfI"></script>
 	<script src="js/jquery-3.7.1.min.js"></script>
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-										<script>
-											// Follow user AJAX
-											$(".followbtn").click(function() {
-												var user_id_v = $(this).data('user-id');
-												var button = this;
-												$(button).attr('disabled', true);
-
-												$.ajax({
-													url: 'ajax.php?follow',
-													method: 'POST',
-													dataType: 'json',
-													data: {
-														user_id: user_id_v
-													},
-													success: function(response) {
-														if (response.status) {
-															$(button).html('<i class="bi bi-check-circle"></i> Followed');
-														} else {
-															$(button).attr('disabled', false);
-														}
-													}
-												});
-											});
-										</script>
+	
 </body>
 
 </html>
