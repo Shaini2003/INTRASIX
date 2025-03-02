@@ -219,65 +219,48 @@ $id = $_SESSION['id'];
 
 		<section>
 			<div><?php
-					include 'includes/dbh.php'; // Include database connection
+include 'includes/dbh.php'; // Include database connection
 
-					// ** Function to fetch stories **
-					function getStories($logged_user_id)
-					{
-						global $conn;
+// ** Function to fetch grouped stories **
+function getGroupedStories($logged_user_id) {
+    global $conn;
 
-						if (!$conn) {
-							die("❌ Error: MySQL connection is closed!");
-						}
+    if (!$conn) {
+        die("❌ Error: MySQL connection is closed!");
+    }
 
-						// ** Fetch logged-in user's story **
-						$sql_user_story = "SELECT stories.story_img, stories.created_at, users.name 
-                       FROM stories 
-                       JOIN users ON stories.user_id = users.id 
-                       WHERE users.id = ? 
-                       ORDER BY stories.created_at DESC 
-                       LIMIT 1";
+    // Fetch stories grouped by user
+    $sql = "SELECT users.id as user_id, users.name, GROUP_CONCAT(stories.story_img ORDER BY stories.created_at DESC) AS story_imgs 
+            FROM stories 
+            JOIN users ON stories.user_id = users.id 
+            GROUP BY users.id 
+            ORDER BY MAX(stories.created_at) DESC";
 
-						$stmt = $conn->prepare($sql_user_story);
-						$stmt->bind_param("i", $logged_user_id);
-						$stmt->execute();
-						$user_story_result = $stmt->get_result();
+    $result = $conn->query($sql);
 
-						// ** Fetch all other stories **
-						$sql_all_stories = "SELECT stories.story_img, stories.created_at, users.name 
-                        FROM stories 
-                        JOIN users ON stories.user_id = users.id 
-                        WHERE users.id != ? 
-                        ORDER BY stories.created_at DESC";
+    return $result;
+}
 
-						$stmt = $conn->prepare($sql_all_stories);
-						$stmt->bind_param("i", $logged_user_id);
-						$stmt->execute();
-						$all_stories_result = $stmt->get_result();
+// Fix: Start session only if it's not already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-						return [$user_story_result, $all_stories_result];
-					}
+// ** Get logged-in user's ID from session **
+$logged_user_id = $_SESSION['id'] ?? null;
 
-					// Fix: Start session only if it's not already active
-					if (session_status() === PHP_SESSION_NONE) {
-						session_start();
-					}
+if (!$logged_user_id) {
+    die("❌ Error: User not logged in.");
+}
 
-					// ** Get logged-in user's ID from session **
-					$logged_user_id = $_SESSION['id'] ?? null;
+// ** Fetch grouped stories **
+$stories_result = getGroupedStories($logged_user_id);
 
-					if (!$logged_user_id) {
-						die("❌ Error: User not logged in.");
-					}
+// ** HTML Output **
+echo '<div class="story-container">';
 
-					// ** Fetch stories **
-					list($user_story_result, $all_stories_result) = getStories($logged_user_id);
-
-					// ** HTML Output **
-					echo '<div class="story-container">';
-
-					// ** Upload Story Button **
-					echo '<div class="story upload-story">
+// ** Upload Story Button **
+echo '<div class="story upload-story">
         <form action="upload_story.php" method="post" enctype="multipart/form-data">
             <label for="storyUpload">
                 <div class="upload-icon">+</div>
@@ -287,29 +270,131 @@ $id = $_SESSION['id'];
         <div class="story-name">Upload</div>
       </div>';
 
-					// ** Display Logged-in User's Story First **
-					if ($user_story_result && $user_story_result->num_rows > 0) {
-						$row = $user_story_result->fetch_assoc();
-						echo '<div class="story">
-            <img src="' . htmlspecialchars($row['story_img']) . '" alt="Story">
-            <div class="story-name">' . htmlspecialchars($row['name']) . ' (You)</div>
-          </div>';
-					}
+// ** Display Stories (One per User) **
+if ($stories_result && $stories_result->num_rows > 0) {
+    while ($row = $stories_result->fetch_assoc()) {
+        // Convert the concatenated story images into an array
+        $story_images = explode(",", $row['story_imgs']);
+        $first_story = htmlspecialchars($story_images[0]); // Show only the latest story as thumbnail
 
-					// ** Display Other Users' Stories **
-					if ($all_stories_result && $all_stories_result->num_rows > 0) {
-						while ($row = $all_stories_result->fetch_assoc()) {
-							echo '<div class="story">
-                <img src="' . htmlspecialchars($row['story_img']) . '" alt="Story">
-                <div class="story-name">' . htmlspecialchars($row['name']) . '</div>
+        echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', \'' . htmlspecialchars($row['name']) . '\')">
+                <img src="' . $first_story . '" alt="Story">
+                <div class="story-name">' . htmlspecialchars($row['name']) . ($row['user_id'] == $logged_user_id ? " (You)" : "") . '</div>
               </div>';
-						}
-					} else {
-						echo "<p>⚠ No stories found.</p>";
-					}
+    }
+} else {
+    echo "<p>⚠ No stories found.</p>";
+}
 
-					echo '</div>'; // Close story-container div
-					?>
+echo '</div>'; // Close story-container div
+?>
+
+<!-- Story Modal -->
+<div id="storyModal" class="modal">
+    <span class="close" onclick="closeStory()">&times;</span>
+    <img class="modal-content" id="storyImage">
+    <div id="storyCaption"></div>
+    <div class="story-controls">
+        <button onclick="prevStory()">&#10094; Prev</button>
+        <button onclick="nextStory()">Next &#10095;</button>
+    </div>
+</div>
+
+<!-- CSS for Modal -->
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        text-align: center;
+    }
+    
+    .modal-content {
+        display: block;
+        margin: auto;
+        max-width: 50%;
+        max-height: 100%;
+        border-radius: 10px;
+    }
+    
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    #storyCaption {
+        text-align: center;
+        color: white;
+        font-size: 20px;
+        margin-top: 10px;
+    }
+
+    .story-controls {
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        display: flex;
+        justify-content: space-between;
+        transform: translateY(-50%);
+    }
+
+    .story-controls button {
+        background: rgba(255, 255, 255, 0.5);
+        border: none;
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+</style>
+
+<!-- JavaScript for Story Navigation -->
+<script>
+    let storyImages = [];
+    let currentStoryIndex = 0;
+
+    function openUserStories(images, userName) {
+        storyImages = images;
+        currentStoryIndex = 0;
+        showStory(userName);
+    }
+
+    function showStory(userName) {
+        if (storyImages.length > 0) {
+            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+            document.getElementById("storyCaption").innerHTML = userName;
+            document.getElementById("storyModal").style.display = "block";
+        }
+    }
+
+    function closeStory() {
+        document.getElementById("storyModal").style.display = "none";
+    }
+
+    function nextStory() {
+        if (currentStoryIndex < storyImages.length - 1) {
+            currentStoryIndex++;
+            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+        }
+    }
+
+    function prevStory() {
+        if (currentStoryIndex > 0) {
+            currentStoryIndex--;
+            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+        }
+    }
+</script>
 
 			</div>
 
@@ -499,41 +584,20 @@ $id = $_SESSION['id'];
 															<div class="we-video-info">
 																<ul>
 																	<li>
-																		<span class="like <?= userLikedPost($post['id'], $_SESSION['id']) ? 'liked' : ''; ?>"
-																			data-post-id="<?= $post['id']; ?>">
-																			<i class="ti-heart"></i>
-																			<ins><?= getLikeCount($post['id']); ?></ins>
-																		</span>
+																		<form action="like_post.php" method="POST">
+																			<input type="hidden" name="post_id" value="<?= $post['id']; ?>">
+																			<button type="submit" class="like <?= userLikedPost($post['id'], $_SESSION['id']) ? 'liked' : ''; ?>">
+																				<i class="ti-heart"></i>
+																				<ins><?= getLikeCount($post['id']); ?></ins>
+																			</button>
+																		</form>
 																	</li>
-
-																	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 																	<script>
-																		$(document).on("click", ".like", function() {
-																			var likeButton = $(this);
-																			var postId = likeButton.data("post-id");
-																			var likeCount = likeButton.find("ins");
-																			$.ajax({
-																				url: "like_post.php",
-																				type: "POST",
-																				data: {
-																					post_id: postId
-																				},
-																				dataType: "json",
-																				success: function(response) {
-																					if (response.status === "liked") {
-																						likeButton.addClass("liked");
-																						likeButton.find("i").addClass("liked-icon");
-																						likeCount.text(parseInt(likeCount.text()) + 1);
-																					} else if (response.status === "unliked") {
-																						likeButton.removeClass("liked");
-																						likeButton.find("i").removeClass("liked-icon");
-																						likeCount.text(parseInt(likeCount.text()) - 1);
-																					}
-																				},
-																				error: function() {
-																					alert("Error processing like. Please try again.");
-																				}
+																		document.addEventListener("DOMContentLoaded", function() {
+																			document.querySelectorAll(".like").forEach(button => {
+																				button.addEventListener("click", function() {
+																					this.classList.toggle("liked");
+																				});
 																			});
 																		});
 																	</script>

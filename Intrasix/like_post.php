@@ -1,23 +1,16 @@
 <?php
-include 'includes/dbh.php';
+include 'includes/dbh.php'; // Database connection
 session_start();
 
-header('Content-Type: application/json');
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'User not logged in']);
-    exit;
-}
-
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['id'];
 $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 
 if ($post_id <= 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid post ID']);
+    header("Location: index.php"); // Redirect on invalid post ID
     exit;
 }
 
-// Check if the user already liked the post
+// Check if user already liked the post
 $query = "SELECT id FROM likes WHERE post_id = ? AND user_id = ?";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, "ii", $post_id, $user_id);
@@ -30,19 +23,14 @@ if (mysqli_fetch_assoc($result)) {
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "ii", $post_id, $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_close($stmt);
-    
-    echo json_encode(['status' => 'unliked']);
 } else {
     // Like the post
     $query = "INSERT INTO likes (post_id, user_id) VALUES (?, ?)";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "ii", $post_id, $user_id);
     mysqli_stmt_execute($stmt);
-    mysqli_stmt_close($stmt);
-    
-    echo json_encode(['status' => 'liked']);
 }
 
-mysqli_close($conn);
+header("Location: " . $_SERVER['HTTP_REFERER']); // Redirect back to the post page
+exit;
 ?>
