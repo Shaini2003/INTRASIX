@@ -603,7 +603,6 @@ $id = $_SESSION['id'];
 																		});
 																	</script>
 
-
 																	<li>
 																		<!-- Click event triggers loading comments -->
 																		<span class="comment-toggle" onclick="loadComments(<?= $post['id']; ?>)">
@@ -617,72 +616,36 @@ $id = $_SESSION['id'];
 															<div class="comment-section" id="comments-section-<?= $post['id']; ?>"></div>
 
 															<!-- Comment Form -->
-															<form class="comment-form" data-post-id="<?= $post['id']; ?>">
-																<input type="hidden" name="post_id" value="<?= $post['id']; ?>">
-																<input type="text" class="comment-text" name="comment_text" placeholder="Write a comment...">
-																<button type="submit">Comment</button>
-															</form>
-
-															<?php
-															include 'includes/dbh.php';
-
-															// Ensure user is logged in before allowing comments
-															if (!isset($_SESSION['id'])) {
-																echo json_encode(['status' => 'error', 'message' => 'User not logged in.']);
-																exit;
-															}
-
-															// Handle the comment submission
-															if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-																$user_id = $_SESSION['id']; // Get logged-in user ID
-																$post_id = filter_input(INPUT_POST, 'post_id', FILTER_VALIDATE_INT);
-																$comment_text = isset($_POST['comment_text']) ? trim($_POST['comment_text']) : '';
-
-																// Validate input
-																if (!$post_id || empty($comment_text)) {
-																	echo json_encode(['status' => 'error', 'message' => 'Invalid comment or post ID.']);
-																	exit;
-																}
-
-																// Prevent duplicate comments (Check if the exact same comment exists)
-																$checkQuery = "SELECT id FROM comments WHERE post_id = ? AND user_id = ? AND comment_text = ?";
-																$checkStmt = mysqli_prepare($conn, $checkQuery);
-																mysqli_stmt_bind_param($checkStmt, "iis", $post_id, $user_id, $comment_text);
-																mysqli_stmt_execute($checkStmt);
-																mysqli_stmt_store_result($checkStmt);
-
-																if (mysqli_stmt_num_rows($checkStmt) > 0) {
-																	echo json_encode(['status' => 'error', 'message' => 'Duplicate comment detected.']);
-																	exit;
-																}
-
-																// Insert new comment into database
-																$query = "INSERT INTO comments (post_id, user_id, comment_text) VALUES (?, ?, ?)";
-																$stmt = mysqli_prepare($conn, $query);
-																mysqli_stmt_bind_param($stmt, "iis", $post_id, $user_id, $comment_text);
-																mysqli_stmt_execute($stmt);
-
-																echo json_encode(['status' => 'success']);
-																exit;
-															}
-															?>
+															<?php if (isset($_SESSION['id'])): ?>
+																<form class="comment-form" data-post-id="<?= $post['id']; ?>">
+																	<input type="hidden" name="post_id" value="<?= $post['id']; ?>">
+																	<input type="text" class="comment-text" name="comment_text" placeholder="Write a comment...">
+																	<button type="submit" class="comment-submit">Comment</button>
+																</form>
+															<?php else: ?>
+																<p>Please log in to comment.</p>
+															<?php endif; ?>
 
 															<script>
-																// Ensure script runs only after DOM is fully loaded
 																document.addEventListener("DOMContentLoaded", function() {
 																	document.querySelectorAll('.comment-form').forEach(form => {
 																		form.addEventListener('submit', function(event) {
 																			event.preventDefault(); // Prevent default form submission
 
-																			let postId = this.getAttribute('data-post-id'); // Get post ID
-																			let commentText = this.querySelector('.comment-text').value.trim(); // Get comment text
+																			const postId = this.getAttribute('data-post-id');
+																			const commentText = this.querySelector('.comment-text').value.trim();
+																			const submitButton = this.querySelector('.comment-submit');
 
 																			if (!commentText) {
-																				alert("Comment cannot be empty"); // Validate input
+																				alert("Comment cannot be empty");
 																				return;
 																			}
 
-																			// Send comment data to the backend
+																			// Prevent multiple submissions
+																			if (form.classList.contains('submitting')) return;
+																			form.classList.add('submitting');
+																			submitButton.disabled = true;
+
 																			fetch('add_comment.php', {
 																					method: 'POST',
 																					headers: {
@@ -690,43 +653,47 @@ $id = $_SESSION['id'];
 																					},
 																					body: `post_id=${postId}&comment_text=${encodeURIComponent(commentText)}`
 																				})
-																				.then(response => response.json()) // Parse JSON response
+																				.then(response => response.json())
 																				.then(data => {
 																					if (data.status === 'success') {
-																						loadComments(postId); // Reload comments after successful submission
-																						this.querySelector('.comment-text').value = ''; // Clear input field
+																						loadComments(postId); // Reload comments
+																						this.querySelector('.comment-text').value = ''; // Clear input
 																					} else {
-																						alert(data.message); // Show error message
+																						alert(data.message);
 																					}
+																				})
+																				.catch(error => {
+																					console.error('Error:', error);
+																					alert('An error occurred.');
+																				})
+																				.finally(() => {
+																					form.classList.remove('submitting');
+																					submitButton.disabled = false;
 																				});
 																		});
 																	});
 																});
 
-																// Function to load comments dynamically
 																function loadComments(postId) {
-																	var commentsSection = document.getElementById("comments-section-" + postId);
-																	commentsSection.innerHTML = "Loading comments..."; // Show loading text
+																	const commentsSection = document.getElementById("comments-section-" + postId);
+																	commentsSection.innerHTML = "Loading comments...";
 
 																	fetch('get_comments.php?post_id=' + postId)
-																		.then(response => response.json()) // Parse JSON response
+																		.then(response => response.json())
 																		.then(comments => {
-																			commentsSection.innerHTML = ""; // Clear previous comments
-																			// Render each comment
 																			commentsSection.innerHTML = comments.map(comment => `
-                    <div class='comment'>
-                        <img src='${comment.profile_pic}' alt='Profile'>
-                        <div>
-                            <strong>${comment.name}</strong>
-                            <p>${comment.comment_text}</p>
+                        <div class='comment'>
+                            <img src='${comment.profile_pic}' alt='Profile'>
+                            <div>
+                                <strong>${comment.name}</strong>
+                                <p>${comment.comment_text}</p>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
-																			updateCommentCount(postId); // Update comment count
+                    `).join('');
+																			updateCommentCount(postId);
 																		});
 																}
 
-																// Function to update the comment count
 																function updateCommentCount(postId) {
 																	fetch('get_comment_count.php?post_id=' + postId)
 																		.then(response => response.json())
@@ -737,21 +704,18 @@ $id = $_SESSION['id'];
 															</script>
 
 															<style>
-																/* Styling for comment section */
 																.comment-section {
 																	margin-top: 10px;
 																	padding: 10px;
 																	border-top: 1px solid #ccc;
 																}
 
-																/* Styling for individual comments */
 																.comment {
 																	display: flex;
 																	align-items: center;
 																	margin-bottom: 10px;
 																}
 
-																/* Profile picture styling */
 																.comment img {
 																	width: 40px;
 																	height: 40px;
@@ -759,7 +723,6 @@ $id = $_SESSION['id'];
 																	margin-right: 10px;
 																}
 
-																/* Comment text container */
 																.comment div {
 																	background: #f1f1f1;
 																	padding: 8px;
