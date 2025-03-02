@@ -219,48 +219,49 @@ $id = $_SESSION['id'];
 
 		<section>
 			<div><?php
-include 'includes/dbh.php'; // Include database connection
+					include 'includes/dbh.php'; // Include database connection
 
-// ** Function to fetch grouped stories **
-function getGroupedStories($logged_user_id) {
-    global $conn;
+					// ** Function to fetch grouped stories **
+					function getGroupedStories($logged_user_id)
+					{
+						global $conn;
 
-    if (!$conn) {
-        die("❌ Error: MySQL connection is closed!");
-    }
+						if (!$conn) {
+							die("❌ Error: MySQL connection is closed!");
+						}
 
-    // Fetch stories grouped by user
-    $sql = "SELECT users.id as user_id, users.name, GROUP_CONCAT(stories.story_img ORDER BY stories.created_at DESC) AS story_imgs 
+						// Fetch stories grouped by user
+						$sql = "SELECT users.id as user_id, users.name, GROUP_CONCAT(stories.story_img ORDER BY stories.created_at DESC) AS story_imgs 
             FROM stories 
             JOIN users ON stories.user_id = users.id 
             GROUP BY users.id 
             ORDER BY MAX(stories.created_at) DESC";
 
-    $result = $conn->query($sql);
+						$result = $conn->query($sql);
 
-    return $result;
-}
+						return $result;
+					}
 
-// Fix: Start session only if it's not already active
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+					// Fix: Start session only if it's not already active
+					if (session_status() === PHP_SESSION_NONE) {
+						session_start();
+					}
 
-// ** Get logged-in user's ID from session **
-$logged_user_id = $_SESSION['id'] ?? null;
+					// ** Get logged-in user's ID from session **
+					$logged_user_id = $_SESSION['id'] ?? null;
 
-if (!$logged_user_id) {
-    die("❌ Error: User not logged in.");
-}
+					if (!$logged_user_id) {
+						die("❌ Error: User not logged in.");
+					}
 
-// ** Fetch grouped stories **
-$stories_result = getGroupedStories($logged_user_id);
+					// ** Fetch grouped stories **
+					$stories_result = getGroupedStories($logged_user_id);
 
-// ** HTML Output **
-echo '<div class="story-container">';
+					// ** HTML Output **
+					echo '<div class="story-container">';
 
-// ** Upload Story Button **
-echo '<div class="story upload-story">
+					// ** Upload Story Button **
+					echo '<div class="story upload-story">
         <form action="upload_story.php" method="post" enctype="multipart/form-data">
             <label for="storyUpload">
                 <div class="upload-icon">+</div>
@@ -270,131 +271,131 @@ echo '<div class="story upload-story">
         <div class="story-name">Upload</div>
       </div>';
 
-// ** Display Stories (One per User) **
-if ($stories_result && $stories_result->num_rows > 0) {
-    while ($row = $stories_result->fetch_assoc()) {
-        // Convert the concatenated story images into an array
-        $story_images = explode(",", $row['story_imgs']);
-        $first_story = htmlspecialchars($story_images[0]); // Show only the latest story as thumbnail
+					// ** Display Stories (One per User) **
+					if ($stories_result && $stories_result->num_rows > 0) {
+						while ($row = $stories_result->fetch_assoc()) {
+							// Convert the concatenated story images into an array
+							$story_images = explode(",", $row['story_imgs']);
+							$first_story = htmlspecialchars($story_images[0]); // Show only the latest story as thumbnail
 
-        echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', \'' . htmlspecialchars($row['name']) . '\')">
+							echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', \'' . htmlspecialchars($row['name']) . '\')">
                 <img src="' . $first_story . '" alt="Story">
                 <div class="story-name">' . htmlspecialchars($row['name']) . ($row['user_id'] == $logged_user_id ? " (You)" : "") . '</div>
               </div>';
-    }
-} else {
-    echo "<p>⚠ No stories found.</p>";
-}
+						}
+					} else {
+						echo "<p>⚠ No stories found.</p>";
+					}
 
-echo '</div>'; // Close story-container div
-?>
+					echo '</div>'; // Close story-container div
+					?>
 
-<!-- Story Modal -->
-<div id="storyModal" class="modal">
-    <span class="close" onclick="closeStory()">&times;</span>
-    <img class="modal-content" id="storyImage">
-    <div id="storyCaption"></div>
-    <div class="story-controls">
-        <button onclick="prevStory()">&#10094; Prev</button>
-        <button onclick="nextStory()">Next &#10095;</button>
-    </div>
-</div>
+				<!-- Story Modal -->
+				<div id="storyModal" class="modal">
+					<span class="close" onclick="closeStory()">&times;</span>
+					<img class="modal-content" id="storyImage">
+					<div id="storyCaption"></div>
+					<div class="story-controls">
+						<button onclick="prevStory()">&#10094; Prev</button>
+						<button onclick="nextStory()">Next &#10095;</button>
+					</div>
+				</div>
 
-<!-- CSS for Modal -->
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.8);
-        text-align: center;
-    }
-    
-    .modal-content {
-        display: block;
-        margin: auto;
-        max-width: 50%;
-        max-height: 100%;
-        border-radius: 10px;
-    }
-    
-    .close {
-        position: absolute;
-        top: 15px;
-        right: 35px;
-        color: white;
-        font-size: 40px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    
-    #storyCaption {
-        text-align: center;
-        color: white;
-        font-size: 20px;
-        margin-top: 10px;
-    }
+				<!-- CSS for Modal -->
+				<style>
+					.modal {
+						display: none;
+						position: fixed;
+						z-index: 1000;
+						left: 0;
+						top: 0;
+						width: 100%;
+						height: 100%;
+						background-color: rgba(0, 0, 0, 0.8);
+						text-align: center;
+					}
 
-    .story-controls {
-        position: absolute;
-        width: 100%;
-        top: 50%;
-        display: flex;
-        justify-content: space-between;
-        transform: translateY(-50%);
-    }
+					.modal-content {
+						display: block;
+						margin: auto;
+						max-width: 50%;
+						max-height: 100%;
+						border-radius: 10px;
+					}
 
-    .story-controls button {
-        background: rgba(255, 255, 255, 0.5);
-        border: none;
-        padding: 10px 20px;
-        font-size: 18px;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-</style>
+					.close {
+						position: absolute;
+						top: 15px;
+						right: 35px;
+						color: white;
+						font-size: 40px;
+						font-weight: bold;
+						cursor: pointer;
+					}
 
-<!-- JavaScript for Story Navigation -->
-<script>
-    let storyImages = [];
-    let currentStoryIndex = 0;
+					#storyCaption {
+						text-align: center;
+						color: white;
+						font-size: 20px;
+						margin-top: 10px;
+					}
 
-    function openUserStories(images, userName) {
-        storyImages = images;
-        currentStoryIndex = 0;
-        showStory(userName);
-    }
+					.story-controls {
+						position: absolute;
+						width: 100%;
+						top: 50%;
+						display: flex;
+						justify-content: space-between;
+						transform: translateY(-50%);
+					}
 
-    function showStory(userName) {
-        if (storyImages.length > 0) {
-            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-            document.getElementById("storyCaption").innerHTML = userName;
-            document.getElementById("storyModal").style.display = "block";
-        }
-    }
+					.story-controls button {
+						background: rgba(255, 255, 255, 0.5);
+						border: none;
+						padding: 10px 20px;
+						font-size: 18px;
+						cursor: pointer;
+						border-radius: 5px;
+					}
+				</style>
 
-    function closeStory() {
-        document.getElementById("storyModal").style.display = "none";
-    }
+				<!-- JavaScript for Story Navigation -->
+				<script>
+					let storyImages = [];
+					let currentStoryIndex = 0;
 
-    function nextStory() {
-        if (currentStoryIndex < storyImages.length - 1) {
-            currentStoryIndex++;
-            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-        }
-    }
+					function openUserStories(images, userName) {
+						storyImages = images;
+						currentStoryIndex = 0;
+						showStory(userName);
+					}
 
-    function prevStory() {
-        if (currentStoryIndex > 0) {
-            currentStoryIndex--;
-            document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-        }
-    }
-</script>
+					function showStory(userName) {
+						if (storyImages.length > 0) {
+							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+							document.getElementById("storyCaption").innerHTML = userName;
+							document.getElementById("storyModal").style.display = "block";
+						}
+					}
+
+					function closeStory() {
+						document.getElementById("storyModal").style.display = "none";
+					}
+
+					function nextStory() {
+						if (currentStoryIndex < storyImages.length - 1) {
+							currentStoryIndex++;
+							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+						}
+					}
+
+					function prevStory() {
+						if (currentStoryIndex > 0) {
+							currentStoryIndex--;
+							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+						}
+					}
+				</script>
 
 			</div>
 
@@ -603,23 +604,172 @@ echo '</div>'; // Close story-container div
 																	</script>
 
 
-
 																	<li>
+																		<!-- Click event triggers loading comments -->
 																		<span class="comment-toggle" onclick="loadComments(<?= $post['id']; ?>)">
-																			<i class="fa-regular fa-comment"></i><ins>52</ins>
+																			<i class="fa-regular fa-comment"></i><ins id="comment-count-<?= $post['id']; ?>">0</ins>
 																		</span>
 																	</li>
 																</ul>
 															</div>
 
-															<div class="comment-section" id="comments-section-<?= $post['id']; ?>">
-																<!-- Comments will load here -->
-															</div>
+															<!-- Comments will be loaded dynamically here -->
+															<div class="comment-section" id="comments-section-<?= $post['id']; ?>"></div>
 
+															<!-- Comment Form -->
 															<form class="comment-form" data-post-id="<?= $post['id']; ?>">
-																<input type="text" class="comment-text" placeholder="Write a comment...">
+																<input type="hidden" name="post_id" value="<?= $post['id']; ?>">
+																<input type="text" class="comment-text" name="comment_text" placeholder="Write a comment...">
 																<button type="submit">Comment</button>
 															</form>
+
+															<?php
+															include 'includes/dbh.php';
+
+															// Ensure user is logged in before allowing comments
+															if (!isset($_SESSION['id'])) {
+																echo json_encode(['status' => 'error', 'message' => 'User not logged in.']);
+																exit;
+															}
+
+															// Handle the comment submission
+															if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+																$user_id = $_SESSION['id']; // Get logged-in user ID
+																$post_id = filter_input(INPUT_POST, 'post_id', FILTER_VALIDATE_INT);
+																$comment_text = isset($_POST['comment_text']) ? trim($_POST['comment_text']) : '';
+
+																// Validate input
+																if (!$post_id || empty($comment_text)) {
+																	echo json_encode(['status' => 'error', 'message' => 'Invalid comment or post ID.']);
+																	exit;
+																}
+
+																// Prevent duplicate comments (Check if the exact same comment exists)
+																$checkQuery = "SELECT id FROM comments WHERE post_id = ? AND user_id = ? AND comment_text = ?";
+																$checkStmt = mysqli_prepare($conn, $checkQuery);
+																mysqli_stmt_bind_param($checkStmt, "iis", $post_id, $user_id, $comment_text);
+																mysqli_stmt_execute($checkStmt);
+																mysqli_stmt_store_result($checkStmt);
+
+																if (mysqli_stmt_num_rows($checkStmt) > 0) {
+																	echo json_encode(['status' => 'error', 'message' => 'Duplicate comment detected.']);
+																	exit;
+																}
+
+																// Insert new comment into database
+																$query = "INSERT INTO comments (post_id, user_id, comment_text) VALUES (?, ?, ?)";
+																$stmt = mysqli_prepare($conn, $query);
+																mysqli_stmt_bind_param($stmt, "iis", $post_id, $user_id, $comment_text);
+																mysqli_stmt_execute($stmt);
+
+																echo json_encode(['status' => 'success']);
+																exit;
+															}
+															?>
+
+															<script>
+																// Ensure script runs only after DOM is fully loaded
+																document.addEventListener("DOMContentLoaded", function() {
+																	document.querySelectorAll('.comment-form').forEach(form => {
+																		form.addEventListener('submit', function(event) {
+																			event.preventDefault(); // Prevent default form submission
+
+																			let postId = this.getAttribute('data-post-id'); // Get post ID
+																			let commentText = this.querySelector('.comment-text').value.trim(); // Get comment text
+
+																			if (!commentText) {
+																				alert("Comment cannot be empty"); // Validate input
+																				return;
+																			}
+
+																			// Send comment data to the backend
+																			fetch('add_comment.php', {
+																					method: 'POST',
+																					headers: {
+																						'Content-Type': 'application/x-www-form-urlencoded'
+																					},
+																					body: `post_id=${postId}&comment_text=${encodeURIComponent(commentText)}`
+																				})
+																				.then(response => response.json()) // Parse JSON response
+																				.then(data => {
+																					if (data.status === 'success') {
+																						loadComments(postId); // Reload comments after successful submission
+																						this.querySelector('.comment-text').value = ''; // Clear input field
+																					} else {
+																						alert(data.message); // Show error message
+																					}
+																				});
+																		});
+																	});
+																});
+
+																// Function to load comments dynamically
+																function loadComments(postId) {
+																	var commentsSection = document.getElementById("comments-section-" + postId);
+																	commentsSection.innerHTML = "Loading comments..."; // Show loading text
+
+																	fetch('get_comments.php?post_id=' + postId)
+																		.then(response => response.json()) // Parse JSON response
+																		.then(comments => {
+																			commentsSection.innerHTML = ""; // Clear previous comments
+																			// Render each comment
+																			commentsSection.innerHTML = comments.map(comment => `
+                    <div class='comment'>
+                        <img src='${comment.profile_pic}' alt='Profile'>
+                        <div>
+                            <strong>${comment.name}</strong>
+                            <p>${comment.comment_text}</p>
+                        </div>
+                    </div>
+                `).join('');
+																			updateCommentCount(postId); // Update comment count
+																		});
+																}
+
+																// Function to update the comment count
+																function updateCommentCount(postId) {
+																	fetch('get_comment_count.php?post_id=' + postId)
+																		.then(response => response.json())
+																		.then(data => {
+																			document.getElementById("comment-count-" + postId).innerText = data.comment_count;
+																		});
+																}
+															</script>
+
+															<style>
+																/* Styling for comment section */
+																.comment-section {
+																	margin-top: 10px;
+																	padding: 10px;
+																	border-top: 1px solid #ccc;
+																}
+
+																/* Styling for individual comments */
+																.comment {
+																	display: flex;
+																	align-items: center;
+																	margin-bottom: 10px;
+																}
+
+																/* Profile picture styling */
+																.comment img {
+																	width: 40px;
+																	height: 40px;
+																	border-radius: 50%;
+																	margin-right: 10px;
+																}
+
+																/* Comment text container */
+																.comment div {
+																	background: #f1f1f1;
+																	padding: 8px;
+																	border-radius: 5px;
+																}
+															</style>
+
+
+
+
 
 														</div>
 													</div>
@@ -715,56 +865,7 @@ echo '</div>'; // Close story-container div
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8c55_YHLvDHGACkQscgbGLtLRdxBDCfI"></script>
 	<script src="js/jquery-3.7.1.min.js"></script>
 	<script src="app.js"></script>
-	<script>
-		$(document).on("submit", ".comment-form", function(e) {
-			e.preventDefault();
-			var form = $(this);
-			var postId = form.data("post-id");
-			var commentText = form.find(".comment-text").val();
 
-			$.ajax({
-				url: "add_comment.php",
-				type: "POST",
-				data: {
-					post_id: postId,
-					comment_text: commentText
-				},
-				dataType: "json",
-				success: function(response) {
-					if (response.status === "success") {
-						form.find(".comment-text").val("");
-						loadComments(postId);
-					} else {
-						alert(response.message);
-					}
-				}
-			});
-		});
-
-		function loadComments(postId) {
-			$.ajax({
-				url: "get_comments.php",
-				type: "GET",
-				data: {
-					post_id: postId
-				},
-				dataType: "json",
-				success: function(comments) {
-					var commentsHtml = "";
-					comments.forEach(function(comment) {
-						commentsHtml += `<div class="comment">
-                                    <img src="${comment.profile_pic}" alt="Profile">
-                                    <div>
-                                        <strong>${comment.name}</strong>
-                                        <p>${comment.comment_text}</p>
-                                    </div>
-                                </div>`;
-					});
-					$("#comments-section-" + postId).html(commentsHtml);
-				}
-			});
-		}
-	</script>
 </body>
 
 </html>

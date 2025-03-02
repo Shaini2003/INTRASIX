@@ -2,12 +2,12 @@
 include 'includes/dbh.php';
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['id'])) {
     echo json_encode(['status' => 'error', 'message' => 'User not logged in']);
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['id'];
 $post_id = $_POST['post_id'];
 $comment_text = trim($_POST['comment_text']);
 
