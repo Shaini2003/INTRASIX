@@ -605,15 +605,16 @@ $id = $_SESSION['id'];
 
 																	<li>
 																		<!-- Click event triggers loading comments -->
-																		<span class="comment-toggle" onclick="loadComments(<?= $post['id']; ?>)">
-																			<i class="fa-regular fa-comment"></i><ins id="comment-count-<?= $post['id']; ?>">0</ins>
+																		<span class="comment-toggle" onclick="toggleComments(<?= $post['id']; ?>)">
+																			<i class="fa-regular fa-comment"></i>
+																			<ins id="comment-count-<?= $post['id']; ?>">0</ins>
 																		</span>
 																	</li>
 																</ul>
 															</div>
 
 															<!-- Comments will be loaded dynamically here -->
-															<div class="comment-section" id="comments-section-<?= $post['id']; ?>"></div>
+															<div class="comment-section" id="comments-section-<?= $post['id']; ?>" style="display: none;"></div>
 
 															<!-- Comment Form -->
 															<?php if (isset($_SESSION['id'])): ?>
@@ -628,9 +629,13 @@ $id = $_SESSION['id'];
 
 															<script>
 																document.addEventListener("DOMContentLoaded", function() {
+																	// Load initial comment count for all posts
+																	updateCommentCount(<?= $post['id']; ?>);
+
+																	// Handle comment form submission
 																	document.querySelectorAll('.comment-form').forEach(form => {
 																		form.addEventListener('submit', function(event) {
-																			event.preventDefault(); // Prevent default form submission
+																			event.preventDefault();
 
 																			const postId = this.getAttribute('data-post-id');
 																			const commentText = this.querySelector('.comment-text').value.trim();
@@ -641,7 +646,6 @@ $id = $_SESSION['id'];
 																				return;
 																			}
 
-																			// Prevent multiple submissions
 																			if (form.classList.contains('submitting')) return;
 																			form.classList.add('submitting');
 																			submitButton.disabled = true;
@@ -656,8 +660,10 @@ $id = $_SESSION['id'];
 																				.then(response => response.json())
 																				.then(data => {
 																					if (data.status === 'success') {
-																						loadComments(postId); // Reload comments
-																						this.querySelector('.comment-text').value = ''; // Clear input
+																						loadComments(postId); // Reload comments after submission
+																						this.querySelector('.comment-text').value = '';
+																						document.getElementById(`comments-section-${postId}`).style.display = 'block'; // Show comments
+																						updateCommentCount(postId); // Update comment count
 																					} else {
 																						alert(data.message);
 																					}
@@ -674,46 +680,80 @@ $id = $_SESSION['id'];
 																	});
 																});
 
+																// Toggle comments visibility and load them if not already loaded
+																function toggleComments(postId) {
+																	const commentsSection = document.getElementById(`comments-section-${postId}`);
+																	if (commentsSection.style.display === 'none' || commentsSection.innerHTML === '') {
+																		loadComments(postId); // Load comments if not already loaded
+																		commentsSection.style.display = 'block'; // Show comments
+																	} else {
+																		commentsSection.style.display = 'none'; // Hide comments
+																	}
+																}
+
+																// Load comments dynamically
 																function loadComments(postId) {
-																	const commentsSection = document.getElementById("comments-section-" + postId);
+																	const commentsSection = document.getElementById(`comments-section-${postId}`);
 																	commentsSection.innerHTML = "Loading comments...";
 
-																	fetch('get_comments.php?post_id=' + postId)
+																	fetch(`get_comments.php?post_id=${postId}`)
 																		.then(response => response.json())
 																		.then(comments => {
-																			commentsSection.innerHTML = comments.map(comment => `
-                        <div class='comment'>
-                            <img src='${comment.profile_pic}' alt='Profile'>
-                            <div>
-                                <strong>${comment.name}</strong>
-                                <p>${comment.comment_text}</p>
+																			if (comments.length === 0) {
+																				commentsSection.innerHTML = "<p>No comments yet.</p>";
+																			} else {
+																				commentsSection.innerHTML = comments.map(comment => `
+                            <div class="comment">
+                                <img src="${comment.profile_pic}" alt="Profile">
+                                <div>
+                                    <strong>${comment.name}</strong>
+                                    <p>${comment.comment_text}</p>
+                                </div>
                             </div>
-                        </div>
-                    `).join('');
-																			updateCommentCount(postId);
+                        `).join('');
+																			}
+																			updateCommentCount(postId); // Update comment count after loading comments
+																		})
+																		.catch(error => {
+																			console.error('Error:', error);
+																			commentsSection.innerHTML = "Failed to load comments.";
 																		});
 																}
 
+																// Update comment count
 																function updateCommentCount(postId) {
-																	fetch('get_comment_count.php?post_id=' + postId)
+																	fetch(`get_comment_count.php?post_id=${postId}`)
 																		.then(response => response.json())
 																		.then(data => {
-																			document.getElementById("comment-count-" + postId).innerText = data.comment_count;
+																			document.getElementById(`comment-count-${postId}`).innerText = data.comment_count;
+																		})
+																		.catch(error => {
+																			console.error('Error updating comment count:', error);
 																		});
 																}
 															</script>
 
 															<style>
+																.container {
+																	max-width: 1200px;
+																	margin: 0 auto;
+																	padding: 20px;
+																}
+
 																.comment-section {
 																	margin-top: 10px;
 																	padding: 10px;
 																	border-top: 1px solid #ccc;
+																	width: 100%;
+																	box-sizing: border-box;
 																}
 
 																.comment {
 																	display: flex;
-																	align-items: center;
+																	align-items: flex-start;
+																	/* Align items at the top for better stacking on small screens */
 																	margin-bottom: 10px;
+																	width: 100%;
 																}
 
 																.comment img {
@@ -721,18 +761,129 @@ $id = $_SESSION['id'];
 																	height: 40px;
 																	border-radius: 50%;
 																	margin-right: 10px;
+																	flex-shrink: 0;
+																	/* Prevent image from shrinking */
 																}
 
 																.comment div {
 																	background: #f1f1f1;
 																	padding: 8px;
 																	border-radius: 5px;
+																	flex-grow: 1;
+																	/* Allow text to grow and fill available space */
+																	word-wrap: break-word;
+																	/* Ensure long text wraps */
+																	max-width: calc(100% - 50px);
+																	/* Adjust for image and margin */
+																}
+
+																.comment-form {
+																	display: flex;
+																	gap: 10px;
+																	margin-top: 10px;
+																	width: 100%;
+																	flex-wrap: wrap;
+																	/* Allow wrapping on small screens */
+																}
+
+																.comment-text {
+																	flex-grow: 1;
+																	padding: 8px;
+																	border: 1px solid #ccc;
+																	border-radius: 4px;
+																	min-width: 200px;
+																	/* Minimum width for input on small screens */
+																}
+
+																.comment-submit {
+																	padding: 8px 16px;
+																	background-color: purple;
+																	color: white;
+																	border: none;
+																	border-radius: 4px;
+																	cursor: pointer;
+																}
+
+																.comment-submit:hover {
+																	background-color: darkpurple;
+																}
+
+																.comment-toggle {
+																	cursor: pointer;
+																	display: flex;
+																	align-items: center;
+																}
+
+																.comment-toggle i {
+																	margin-right: 5px;
+																}
+
+																.comment-toggle ins {
+																	text-decoration: none;
+																	font-weight: bold;
+																}
+
+																/* Media Queries for Responsiveness */
+																@media screen and (max-width: 768px) {
+																	.comment {
+																		flex-direction: column;
+																		/* Stack elements vertically on smaller screens */
+																		align-items: flex-start;
+																	}
+
+																	.comment img {
+																		margin-bottom: 10px;
+																		/* Space below image when stacked */
+																		margin-right: 0;
+																		/* Remove right margin */
+																	}
+
+																	.comment div {
+																		max-width: 100%;
+																		/* Full width for text on small screens */
+																	}
+
+																	.comment-form {
+																		flex-direction: column;
+																		/* Stack form elements vertically */
+																	}
+
+																	.comment-text {
+																		width: 100%;
+																		/* Full width on small screens */
+																		min-width: 0;
+																		/* Override min-width for full responsiveness */
+																	}
+
+																	.comment-submit {
+																		width: 100%;
+																		/* Full width button on small screens */
+																	}
+																}
+
+																@media screen and (max-width: 480px) {
+																	.container {
+																		padding: 10px;
+																		/* Reduce padding on very small screens */
+																	}
+
+																	.comment img {
+																		width: 30px;
+																		/* Smaller profile images on tiny screens */
+																		height: 30px;
+																	}
+
+																	.comment-text {
+																		font-size: 14px;
+																		/* Smaller font for input on tiny screens */
+																	}
+
+																	.comment-submit {
+																		font-size: 14px;
+																		/* Smaller font for button on tiny screens */
+																	}
 																}
 															</style>
-
-
-
-
 
 														</div>
 													</div>

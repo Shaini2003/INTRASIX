@@ -23,7 +23,6 @@ if (!$post_id || empty($comment_text)) {
     exit;
 }
 
-// Check for duplicate comments within the last minute
 $checkQuery = "SELECT id FROM comments WHERE post_id = ? AND user_id = ? AND comment_text = ? AND created_at > NOW() - INTERVAL 1 MINUTE";
 $checkStmt = mysqli_prepare($conn, $checkQuery);
 mysqli_stmt_bind_param($checkStmt, "iis", $post_id, $user_id, $comment_text);
@@ -35,7 +34,6 @@ if (mysqli_stmt_num_rows($checkStmt) > 0) {
     exit;
 }
 
-// Insert the comment
 $query = "INSERT INTO comments (post_id, user_id, comment_text) VALUES (?, ?, ?)";
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, "iis", $post_id, $user_id, $comment_text);
