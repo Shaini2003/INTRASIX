@@ -218,17 +218,66 @@ $id = $_SESSION['id'];
 		</div><!-- topbar -->
 
 		<section>
-			<div>
-			<?php
+			<div><?php
+					include 'includes/dbh.php'; // Include database connection
 
-$logged_user_id = $_SESSION['id'];
-$sql = "SELECT stories.story_img, stories.created_at, users.name 
-FROM stories 
-JOIN users ON stories.user_id = users.id 
-ORDER BY stories.created_at DESC";
+					// ** Function to fetch stories **
+					function getStories($logged_user_id)
+					{
+						global $conn;
 
-echo '<div class="story-container">';
-echo '<div class="story upload-story">
+						if (!$conn) {
+							die("❌ Error: MySQL connection is closed!");
+						}
+
+						// ** Fetch logged-in user's story **
+						$sql_user_story = "SELECT stories.story_img, stories.created_at, users.name 
+                       FROM stories 
+                       JOIN users ON stories.user_id = users.id 
+                       WHERE users.id = ? 
+                       ORDER BY stories.created_at DESC 
+                       LIMIT 1";
+
+						$stmt = $conn->prepare($sql_user_story);
+						$stmt->bind_param("i", $logged_user_id);
+						$stmt->execute();
+						$user_story_result = $stmt->get_result();
+
+						// ** Fetch all other stories **
+						$sql_all_stories = "SELECT stories.story_img, stories.created_at, users.name 
+                        FROM stories 
+                        JOIN users ON stories.user_id = users.id 
+                        WHERE users.id != ? 
+                        ORDER BY stories.created_at DESC";
+
+						$stmt = $conn->prepare($sql_all_stories);
+						$stmt->bind_param("i", $logged_user_id);
+						$stmt->execute();
+						$all_stories_result = $stmt->get_result();
+
+						return [$user_story_result, $all_stories_result];
+					}
+
+					// Fix: Start session only if it's not already active
+					if (session_status() === PHP_SESSION_NONE) {
+						session_start();
+					}
+
+					// ** Get logged-in user's ID from session **
+					$logged_user_id = $_SESSION['id'] ?? null;
+
+					if (!$logged_user_id) {
+						die("❌ Error: User not logged in.");
+					}
+
+					// ** Fetch stories **
+					list($user_story_result, $all_stories_result) = getStories($logged_user_id);
+
+					// ** HTML Output **
+					echo '<div class="story-container">';
+
+					// ** Upload Story Button **
+					echo '<div class="story upload-story">
         <form action="upload_story.php" method="post" enctype="multipart/form-data">
             <label for="storyUpload">
                 <div class="upload-icon">+</div>
@@ -237,22 +286,33 @@ echo '<div class="story upload-story">
         </form>
         <div class="story-name">Upload</div>
       </div>';
-			$result = $conn->query($sql);
 
-			if ($result->num_rows > 0) {
-				while ($row = $result->fetch_assoc()) {
-					echo '<div class="story" style="text-align: center;">
-                <img src="' . $row['story_img'] . '" alt="Story" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
-                <div class="story-name" style="margin-top: 5px; font-size: 14px; color: #333;">' . $row['name'] . '</div>
+					// ** Display Logged-in User's Story First **
+					if ($user_story_result && $user_story_result->num_rows > 0) {
+						$row = $user_story_result->fetch_assoc();
+						echo '<div class="story">
+            <img src="' . htmlspecialchars($row['story_img']) . '" alt="Story">
+            <div class="story-name">' . htmlspecialchars($row['name']) . ' (You)</div>
+          </div>';
+					}
+
+					// ** Display Other Users' Stories **
+					if ($all_stories_result && $all_stories_result->num_rows > 0) {
+						while ($row = $all_stories_result->fetch_assoc()) {
+							echo '<div class="story">
+                <img src="' . htmlspecialchars($row['story_img']) . '" alt="Story">
+                <div class="story-name">' . htmlspecialchars($row['name']) . '</div>
               </div>';
-				}
-			} else {
-				echo "<p>No stories found.</p>";
-			}
-			?>
+						}
+					} else {
+						echo "<p>⚠ No stories found.</p>";
+					}
+
+					echo '</div>'; // Close story-container div
+					?>
 
 			</div>
-			
+
 			<div class="gap gray-bg">
 				<div class="container-fluid">
 					<div class="row">
@@ -438,26 +498,65 @@ echo '<div class="story upload-story">
 															<p><?php echo nl2br(htmlspecialchars($post['post_text'])); ?></p>
 															<div class="we-video-info">
 																<ul>
-																	<li><span class="views"><i class="fa fa-eye"></i> <ins>1.2k</ins></span></li>
-																	<li><span class="comment"><i class="fa fa-comments-o"></i> <ins>52</ins></span></li>
-																	<li><span class="like"><i class="ti-heart"></i> <ins>2.2k</ins></span></li>
-																	<li><span class="dislike"><i class="ti-heart-broken"></i> <ins>200</ins></span></li>
-																	<li class="social-media">
-																		<div class="menu">
-																			<div class="btn trigger"><i class="fa fa-share-alt"></i></div>
-																			<div class="rotater">
-																				<div class="btn btn-icon"><a href="#"><i class="fa fa-facebook"></i></a></div>
-																			</div>
-																			<div class="rotater">
-																				<div class="btn btn-icon"><a href="#"><i class="fa fa-twitter"></i></a></div>
-																			</div>
-																			<div class="rotater">
-																				<div class="btn btn-icon"><a href="#"><i class="fa fa-instagram"></i></a></div>
-																			</div>
-																		</div>
+																	<li>
+																		<span class="like <?= userLikedPost($post['id'], $_SESSION['id']) ? 'liked' : ''; ?>"
+																			data-post-id="<?= $post['id']; ?>">
+																			<i class="ti-heart"></i>
+																			<ins><?= getLikeCount($post['id']); ?></ins>
+																		</span>
+																	</li>
+
+																	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+																	<script>
+																		$(document).on("click", ".like", function() {
+																			var likeButton = $(this);
+																			var postId = likeButton.data("post-id");
+																			var likeCount = likeButton.find("ins");
+																			$.ajax({
+																				url: "like_post.php",
+																				type: "POST",
+																				data: {
+																					post_id: postId
+																				},
+																				dataType: "json",
+																				success: function(response) {
+																					if (response.status === "liked") {
+																						likeButton.addClass("liked");
+																						likeButton.find("i").addClass("liked-icon");
+																						likeCount.text(parseInt(likeCount.text()) + 1);
+																					} else if (response.status === "unliked") {
+																						likeButton.removeClass("liked");
+																						likeButton.find("i").removeClass("liked-icon");
+																						likeCount.text(parseInt(likeCount.text()) - 1);
+																					}
+																				},
+																				error: function() {
+																					alert("Error processing like. Please try again.");
+																				}
+																			});
+																		});
+																	</script>
+
+
+
+																	<li>
+																		<span class="comment-toggle" onclick="loadComments(<?= $post['id']; ?>)">
+																			<i class="fa-regular fa-comment"></i><ins>52</ins>
+																		</span>
 																	</li>
 																</ul>
 															</div>
+
+															<div class="comment-section" id="comments-section-<?= $post['id']; ?>">
+																<!-- Comments will load here -->
+															</div>
+
+															<form class="comment-form" data-post-id="<?= $post['id']; ?>">
+																<input type="text" class="comment-text" placeholder="Write a comment...">
+																<button type="submit">Comment</button>
+															</form>
+
 														</div>
 													</div>
 												</div>
@@ -552,6 +651,56 @@ echo '<div class="story upload-story">
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8c55_YHLvDHGACkQscgbGLtLRdxBDCfI"></script>
 	<script src="js/jquery-3.7.1.min.js"></script>
 	<script src="app.js"></script>
+	<script>
+		$(document).on("submit", ".comment-form", function(e) {
+			e.preventDefault();
+			var form = $(this);
+			var postId = form.data("post-id");
+			var commentText = form.find(".comment-text").val();
+
+			$.ajax({
+				url: "add_comment.php",
+				type: "POST",
+				data: {
+					post_id: postId,
+					comment_text: commentText
+				},
+				dataType: "json",
+				success: function(response) {
+					if (response.status === "success") {
+						form.find(".comment-text").val("");
+						loadComments(postId);
+					} else {
+						alert(response.message);
+					}
+				}
+			});
+		});
+
+		function loadComments(postId) {
+			$.ajax({
+				url: "get_comments.php",
+				type: "GET",
+				data: {
+					post_id: postId
+				},
+				dataType: "json",
+				success: function(comments) {
+					var commentsHtml = "";
+					comments.forEach(function(comment) {
+						commentsHtml += `<div class="comment">
+                                    <img src="${comment.profile_pic}" alt="Profile">
+                                    <div>
+                                        <strong>${comment.name}</strong>
+                                        <p>${comment.comment_text}</p>
+                                    </div>
+                                </div>`;
+					});
+					$("#comments-section-" + postId).html(commentsHtml);
+				}
+			});
+		}
+	</script>
 </body>
 
 </html>

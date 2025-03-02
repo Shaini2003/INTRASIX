@@ -18,3 +18,4 @@ if (isset($_GET['follow'])) {
         echo json_encode(['status' => false]);
     }
 }
+

@@ -187,3 +187,34 @@ function followUser($user_id) {
     $stmt->bind_param("ii", $current_user, $user_id);
     return $stmt->execute();
 }
+
+
+function getLikeCount($post_id) {
+    include 'includes/dbh.php'; 
+
+    $query = "SELECT COUNT(*) AS like_count FROM likes WHERE post_id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $post_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+    
+    return $row['like_count'] ?? 0;
+}
+
+function userLikedPost($post_id, $user_id) {
+    include 'includes/dbh.php';
+
+    $query = "SELECT id FROM likes WHERE post_id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "ii", $post_id, $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $liked = mysqli_fetch_assoc($result) ? true : false;
+    mysqli_stmt_close($stmt);
+
+    return $liked;
+}
+
+

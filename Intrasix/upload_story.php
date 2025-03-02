@@ -1,8 +1,11 @@
 <?php
+
+session_start(); //start the session
 include 'includes/dbh.php'; // Include database connection
 
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = 1; // Change this to dynamically get the logged-in user ID
+    $user_id =$_SESSION['id']; // Change this to dynamically get the logged-in user ID
     $upload_dir = "uploads/";
 
     if (!is_dir($upload_dir)) {

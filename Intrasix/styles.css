@@ -108,3 +108,13 @@
     color: #333;
     white-space: nowrap; /* Prevent text wrapping */
 }
+.liked {
+    background-color: black !important;
+    color: white !important;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.liked-icon {
+    color: red !important;
+}
