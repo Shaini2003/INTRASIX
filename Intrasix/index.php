@@ -571,7 +571,7 @@ $id = $_SESSION['id'];
 														</figure>
 														<div class="friend-name">
 															<ins>
-																<a href="user_profile.php?id=<?php echo $post['user_id']; ?>" title="<?php echo htmlspecialchars($post['name']); ?>">
+																<a href="profile.php?id=<?php echo $post['user_id']; ?>" title="<?php echo htmlspecialchars($post['name']); ?>">
 																	<?php echo htmlspecialchars($post['name']); ?>
 																</a>
 															</ins>
@@ -951,33 +951,7 @@ $id = $_SESSION['id'];
 									</div>
 								</div>
 
-								<?php
-
-
-								if (!isset($_SESSION['id'])) {
-									die("Session ID not set. Please log in.");
-								}
-
-								$user_id = $_SESSION['id'];
-
-								// Function to get followers
-								function getFollowers($user_id, $conn)
-								{
-									$stmt = $conn->prepare("
-								SELECT u.id, u.name, u.profile_pic
-								FROM follow_list f
-								JOIN users u ON f.follower_id = u.id
-								WHERE f.user_id = ?
-								");
-									$stmt->bind_param("i", $user_id);
-									$stmt->execute();
-									$result = $stmt->get_result();
-
-									return $result->num_rows > 0 ? $result->fetch_all(MYSQLI_ASSOC) : [];
-								}
-
-								$followers = getFollowers($user_id, $conn);
-								?>
+								
 
 								<div class="col-lg-3">
 									<aside class="sidebar static">

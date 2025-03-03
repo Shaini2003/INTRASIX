@@ -127,11 +127,11 @@
 }
 
 .like:hover {
-    color: #ff4444;
+    color: #ef44ff;
 }
 
 .like.liked {
-    color: #ff4444;
+    color: #d744ff;
 }
 
 .like i.ti-heart {

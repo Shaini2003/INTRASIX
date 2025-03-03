@@ -215,3 +215,118 @@ function userLikedPost($post_id, $user_id) {
 
     return $liked;
 }
+
+
+function getUserrByUsername(string $username): ?array {
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM users WHERE name = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    
+    $result = $stmt->get_result(); // Get the result set
+    $user = $result->fetch_assoc(); // Fetch as associative array
+    
+    $stmt->close();
+    return $user ?: null;
+}
+function getPosttById(int $user_id): array {
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $posts = [];
+    while ($row = $result->fetch_assoc()) {
+        $posts[] = $row;
+    }
+    
+    $stmt->close();
+    return $posts;
+}
+
+function getFollowersCount(int $user_id): int {
+    global $conn;
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM follow_list WHERE following_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    $stmt->close();
+    return (int)$row['count'];
+}
+
+/**
+ * Get following count
+ * @param int $user_id
+ * @return int
+ */
+function getFollowingCount(int $user_id): int {
+    global $conn;
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM follow_list WHERE follower_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    $stmt->close();
+    return (int)$row['count'];
+}
+
+/**
+ * Check if user is following another user
+ * @param int $follower_id
+ * @param int $following_id
+ * @return bool
+ */
+function isFollowing(int $follower_id, int $following_id): bool {
+    global $conn;
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM follow_list WHERE follower_id = ? AND following_id = ?");
+    $stmt->bind_param("ii", $follower_id, $following_id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $count = $result->fetch_assoc()['COUNT(*)'];
+    
+    $stmt->close();
+    return $count > 0;
+}
+
+/**
+ * Toggle follow/unfollow
+ * @param int $follower_id
+ * @param int $following_id
+ * @return bool
+ */
+function toggleFollow(int $follower_id, int $following_id): bool {
+    global $conn;
+    if (isFollowing($follower_id, $following_id)) {
+        $stmt = $conn->prepare("DELETE FROM follow_list WHERE follower_id = ? AND following_id = ?");
+    } else {
+        $stmt = $conn->prepare("INSERT INTO follow_list (follower_id, following_id) VALUES (?, ?)");
+    }
+    $stmt->bind_param("ii", $follower_id, $following_id);
+    $success = $stmt->execute();
+    
+    $stmt->close();
+    return $success;
+}
+
+/**
+ * Block a user
+ * @param int $blocker_id
+ * @param int $blocked_id
+ * @return bool
+ */
+function blockUser(int $blocker_id, int $blocked_id): bool {
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)");
+    $stmt->bind_param("ii", $blocker_id, $blocked_id);
+    $success = $stmt->execute();
+    
+    $stmt->close();
+    return $success;
+}
