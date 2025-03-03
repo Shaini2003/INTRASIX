@@ -2,7 +2,7 @@
 session_start();
 include 'includes/dbh.php'; // Include database connection
 include 'includes/functions.inc.php';
-include 'ajax.php';
+
 
 global $posts;
 if (!isset($_SESSION['id'])) {
@@ -454,65 +454,148 @@ $id = $_SESSION['id'];
 											</ul>
 										</div><!-- Shortcuts -->
 
+										<!-- HTML/PHP Widget Section -->
 										<div class="widget stick-widget">
 											<h4 class="widget-title">Friends Suggest</h4>
 											<ul class="followers">
 												<?php
+												// Fetch and display follow suggestions
+												$follow_suggestions = filterFollowSuggestion(getFollowSuggestions());
 
-												if (!isset($_SESSION['id'])) {
-													echo "<li>Please log in to see follow suggestions.</li>";
+												if (empty($follow_suggestions)) {
+													echo "<li>No follow suggestions available.</li>";
 												} else {
-													// Fetch follow suggestions
-													$follow_suggestions = filterFollowSuggestion(getFollowSuggestions());
-
-													// Display users or a message if no suggestions are available
-													if (!empty($follow_suggestions)) {
-														foreach ($follow_suggestions as $suser) {
+													foreach ($follow_suggestions as $suser) {
 												?>
-															<li>
-																<figure>
-																	<img src="<?php echo htmlspecialchars($suser['profile_pic'] ?? 'default.jpg'); ?>" alt="Profile Picture">
-																</figure>
-																<div class="friend-meta">
-																	<h4>
-																		<a href="'?u=<?= $suser['name'] ?>'<?= htmlspecialchars($suser['id']) ?>" title=""><?= htmlspecialchars($suser['name']) ?></a>
-																	</h4>
-																	<button class="btn btn-sm btn-primary followbtn" data-user-id='<?= htmlspecialchars($suser['id']) ?>'>Follow</button>
-																</div>
-															</li>
+														<li>
+															<figure>
+																<img src="<?= htmlspecialchars($suser['profile_pic'] ?? 'default.jpg') ?>" alt="Profile Picture">
+															</figure>
+															<div class="friend-meta">
+																<h4>
+																	<a href="?u=<?= htmlspecialchars($suser['name']) ?>&id=<?= htmlspecialchars($suser['id']) ?>"
+																		title=""><?= htmlspecialchars($suser['name']) ?></a>
+																</h4>
+																<?php if (isset($_SESSION['userdata']['id'])) { ?>
+																	<button class="btn btn-sm btn-primary followbtn"
+																		data-user-id="<?= htmlspecialchars($suser['id']) ?>">Follow</button>
+																<?php } ?>
+															</div>
+														</li>
 												<?php
-														}
-													} else {
-														echo "<li>No follow suggestions available.</li>";
 													}
 												}
 												?>
 											</ul>
 										</div>
 
+										<?php
+										// Fetch follow suggestions
+										function getFollowSuggestions()
+										{
+											global $conn;
+
+											// Get 10 random users regardless of login status
+											$query = "
+        SELECT id, name, profile_pic 
+        FROM users 
+        ORDER BY RAND() 
+        LIMIT 10
+    ";
+
+											$stmt = $conn->prepare($query);
+											$stmt->execute();
+											$result = $stmt->get_result();
+
+											return $result->fetch_all(MYSQLI_ASSOC);
+										}
+
+										// Filter out already followed users if logged in
+										function filterFollowSuggestion($list)
+										{
+											if (!isset($_SESSION['userdata']['id'])) {
+												return $list; // Return full list if not logged in
+											}
+
+											$filtered_list = [];
+											$current_user = $_SESSION['userdata']['id'];
+
+											foreach ($list as $user) {
+												if ($user['id'] != $current_user && !checkFollowStatus($user['id'])) {
+													$filtered_list[] = $user;
+												}
+											}
+											return $filtered_list;
+										}
+
+										// Check if the user is already followed
+										function checkFollowStatus($user_id)
+										{
+											global $conn;
+
+											if (!isset($_SESSION['userdata']['id'])) {
+												return false; // No filtering if not logged in
+											}
+
+											$current_user = $_SESSION['userdata']['id'];
+
+											$stmt = $conn->prepare("
+        SELECT COUNT(*) as row_count 
+        FROM follow_list 
+        WHERE follower_id = ? AND user_id = ?
+    ");
+											$stmt->bind_param("ii", $current_user, $user_id);
+											$stmt->execute();
+											$result = $stmt->get_result()->fetch_assoc();
+
+											return $result['row_count'] > 0;
+										}
+
+										// Follow a user
+										function followUser($user_id)
+										{
+											global $conn;
+
+											if (!isset($_SESSION['userdata']['id'])) {
+												return false;
+											}
+
+											$current_user = $_SESSION['userdata']['id'];
+
+											if (checkFollowStatus($user_id) || $current_user == $user_id) {
+												return false;
+											}
+
+											$stmt = $conn->prepare("
+        INSERT INTO follow_list (follower_id, user_id) 
+        VALUES (?, ?)
+    ");
+											$stmt->bind_param("ii", $current_user, $user_id);
+											return $stmt->execute();
+										}
+										?>
+
 										<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 										<script>
-											// Follow user AJAX
-											$(".followbtn").click(function() {
-												var user_id_v = $(this).data('user-id');
-												var button = this;
-												$(button).attr('disabled', true);
+											document.querySelectorAll('.followbtn').forEach(button => {
+												button.addEventListener('click', function() {
+													const userId = this.getAttribute('data-user-id');
 
-												$.ajax({
-													url: 'ajax.php?follow',
-													method: 'POST',
-													dataType: 'json',
-													data: {
-														user_id: user_id_v
-													},
-													success: function(response) {
-														if (response.status) {
-															$(button).html('<i class="bi bi-check-circle"></i> Followed');
-														} else {
-															$(button).attr('disabled', false);
-															alert("Failed to follow. Try again.");
-														}
-													}
+													fetch('follow.php', {
+															method: 'POST',
+															headers: {
+																'Content-Type': 'application/x-www-form-urlencoded',
+															},
+															body: 'user_id=' + encodeURIComponent(userId)
+														})
+														.then(response => response.json())
+														.then(data => {
+															if (data.success) {
+																this.textContent = 'Following';
+																this.disabled = true;
+															}
+														})
+														.catch(error => console.error('Error:', error));
 												});
 											});
 										</script>
@@ -951,7 +1034,7 @@ $id = $_SESSION['id'];
 									</div>
 								</div>
 
-								
+
 
 								<div class="col-lg-3">
 									<aside class="sidebar static">

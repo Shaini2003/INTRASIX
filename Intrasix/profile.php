@@ -1,23 +1,24 @@
 <?php
 session_start();
 include 'includes/dbh.php';
-include 'includes/functions.inc.php';
+include 'functions.php';
 
 if (!isset($_SESSION['name'])) {
     header("Location: login.php");
     exit;
 }
 
-$view_username = $_GET['username'] ?? $_SESSION['name'];
-$current_user = getUserrByUsername($_SESSION['name']);
-$profile = getUserrByUsername($view_username);
+// Get the username to view (from URL or current session)
+$view_username = $_GET['name'] ?? $_SESSION['name'];
+$current_user = getUserByUsername($_SESSION['name']);
+$profile = getUserByUsername($view_username);
 
 if (!$profile) {
     echo "User not found";
     exit;
 }
 
-$profile_posts = getPosttById($profile['id']);
+$profile_posts = getPostById($profile['id']);
 $is_own_profile = $current_user['id'] === $profile['id'];
 $followers_count = getFollowersCount($profile['id']);
 $following_count = getFollowingCount($profile['id']);
@@ -26,14 +27,22 @@ $is_following = !$is_own_profile && isFollowing($current_user['id'], $profile['i
 // Handle follow/unfollow and block actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['toggle_follow']) && !$is_own_profile) {
-        toggleFollow($current_user['id'], $profile['id']);
-        header("Location: profile.php?username=" . $view_username);
-        exit;
+        $success = toggleFollow($current_user['id'], $profile['id']);
+        if ($success) {
+            header("Location: profile.php?name=" . urlencode($view_username));
+            exit;
+        } else {
+            echo "Failed to update follow status.";
+        }
     }
     if (isset($_POST['block']) && !$is_own_profile) {
-        blockUser($current_user['id'], $profile['id']);
-        header("Location: profile.php?username=" . $view_username);
-        exit;
+        $success = blockUser($current_user['id'], $profile['id']);
+        if ($success) {
+            header("Location: profile.php?name=" . urlencode($view_username));
+            exit;
+        } else {
+            echo "Failed to block user.";
+        }
     }
 }
 ?>
@@ -45,27 +54,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <title><?php echo htmlspecialchars($profile['username']); ?>'s Profile</title>
+    <title><?php echo htmlspecialchars($profile['name']); ?>'s Profile</title>
     <style>
-        /* Same styles as your original code */
         :root {
             --primary-color: #007bff;
             --secondary-color: #6c757d;
             --background-color: #f8f9fa;
         }
-
         body {
             background-color: var(--background-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
         }
-
         .profile-container {
             background: white;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
         .profile-img {
             border: 4px solid white;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -81,10 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </a>
                 <form class="d-flex w-50" action="profile.php" method="GET">
                     <input class="form-control me-2 rounded-pill" type="search" name="username" 
-                           placeholder="Search for someone..." aria-label="Search">
+                           placeholder="Search for someone..." aria-label="Search" required>
+                    <button class="btn btn-outline-primary rounded-pill" type="submit">Search</button>
                 </form>
             </div>
-            <!-- Same navbar items as your original code -->
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link text-dark" href="index.php"><i class="bi bi-house-door-fill"></i></a></li>
                 <li class="nav-item"><a class="nav-link text-dark" href="post.php"><i class="bi bi-plus-square-fill"></i></a></li>
@@ -134,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
                     </div>
-                    <span style="font-size: larger;" class="text-secondary mb-3">@<?php echo htmlspecialchars($profile['email']); ?></span>
+                    <span style="font-size: larger;" class="text-secondary mb-3">@<?php echo htmlspecialchars($profile['name']); ?></span>
                     <div class="d-flex gap-2 align-items-center my-3">
                         <a class="btn btn-sm btn-primary"><i class="bi bi-file-post-fill"></i> <?php echo count($profile_posts); ?> Posts</a>
                         <a class="btn btn-sm btn-primary"><i class="bi bi-people-fill"></i> <?php echo $followers_count; ?> Followers</a>
