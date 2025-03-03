@@ -188,7 +188,6 @@ function followUser($user_id) {
     return $stmt->execute();
 }
 
-
 function getLikeCount($post_id) {
     include 'includes/dbh.php'; 
 
@@ -216,5 +215,3 @@ function userLikedPost($post_id, $user_id) {
 
     return $liked;
 }
-
-

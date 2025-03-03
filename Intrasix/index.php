@@ -585,22 +585,80 @@ $id = $_SESSION['id'];
 															<div class="we-video-info">
 																<ul>
 																	<li>
-																		<form action="like_post.php" method="POST">
+																		<!-- Like button form with onsubmit event -->
+																		<form class="like-form" action="like_post.php" method="POST" onsubmit="return handleLikeSubmit(event, <?= $post['id']; ?>)">
 																			<input type="hidden" name="post_id" value="<?= $post['id']; ?>">
 																			<button type="submit" class="like <?= userLikedPost($post['id'], $_SESSION['id']) ? 'liked' : ''; ?>">
 																				<i class="ti-heart"></i>
-																				<ins><?= getLikeCount($post['id']); ?></ins>
+																				<ins id="like-count-<?= $post['id']; ?>"><?= getLikeCount($post['id']); ?></ins>
 																			</button>
 																		</form>
 																	</li>
 																	<script>
-																		document.addEventListener("DOMContentLoaded", function() {
-																			document.querySelectorAll(".like").forEach(button => {
-																				button.addEventListener("click", function() {
-																					this.classList.toggle("liked");
+																		// Handle like form submission without AJAX
+																		function handleLikeSubmit(event, postId) {
+																			event.preventDefault(); // Prevent default form submission and page refresh
+
+																			const form = event.target;
+																			const likeButton = form.querySelector('.like');
+																			const likeCountElement = document.getElementById(`like-count-${postId}`);
+																			const isLiked = likeButton.classList.contains('liked');
+																			const userId = <?= isset($_SESSION['id']) ? $_SESSION['id'] : 'null' ?>; // Ensure user is logged in
+
+																			if (!userId) {
+																				alert("Please log in to like posts.");
+																				return false;
+																			}
+
+																			// Store current scroll position
+																			const scrollPosition = window.scrollY || window.pageYOffset;
+
+																			// Submit the form programmatically
+																			fetch(form.action, {
+																					method: form.method,
+																					body: new FormData(form)
+																				})
+																				.then(response => response.text()) // Get the server response (HTML)
+																				.then(html => {
+																					// Parse the response to update the like count and state
+																					const parser = new DOMParser();
+																					const doc = parser.parseFromString(html, 'text/html');
+																					const newLikeCount = doc.getElementById(`like-count-${postId}`)?.innerText || likeCountElement.innerText;
+																					const newIsLiked = doc.querySelector(`.like[data-post-id="${postId}"]`)?.classList.contains('liked') || false;
+
+																					// Update UI
+																					likeCountElement.innerText = newLikeCount;
+																					likeButton.classList.toggle('liked', newIsLiked);
+
+																					// Restore scroll position after the page reloads
+																					window.scrollTo(0, scrollPosition);
+																				})
+																				.catch(error => {
+																					console.error('Error:', error);
+																					alert('An error occurred while liking the post.');
 																				});
-																			});
+
+																			return false; // Prevent default form submission
+																		}
+
+																		// Function to update like count and state after page load (optional for consistency)
+																		document.addEventListener("DOMContentLoaded", function() {
+																			const urlParams = new URLSearchParams(window.location.search);
+																			if (urlParams.get('post_id')) {
+																				const postId = urlParams.get('post_id');
+																				updateLikeUI(postId);
+																			}
 																		});
+
+																		function updateLikeUI(postId) {
+																			const likeButton = document.querySelector(`.like-form[data-post-id="${postId}"] .like`);
+																			const likeCountElement = document.getElementById(`like-count-${postId}`);
+
+																			if (likeButton && likeCountElement) {
+																				likeCountElement.innerText = getLikeCount(postId); // Update with server-side count
+																				likeButton.classList.toggle('liked', userLikedPost(postId, <?= isset($_SESSION['id']) ? $_SESSION['id'] : 'null' ?>));
+																			}
+																		}
 																	</script>
 
 																	<li>

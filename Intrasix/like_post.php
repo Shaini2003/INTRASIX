@@ -1,12 +1,17 @@
 <?php
-include 'includes/dbh.php'; // Database connection
+include 'includes/dbh.php';
 session_start();
 
 $user_id = $_SESSION['id'];
 $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 
 if ($post_id <= 0) {
-    header("Location: index.php"); // Redirect on invalid post ID
+    echo json_encode(['status' => 'error', 'message' => 'Invalid post ID']);
+    exit;
+}
+
+if (!isset($_SESSION['id'])) {
+    echo json_encode(['status' => 'error', 'message' => 'User not logged in']);
     exit;
 }
 
@@ -31,6 +36,15 @@ if (mysqli_fetch_assoc($result)) {
     mysqli_stmt_execute($stmt);
 }
 
-header("Location: " . $_SERVER['HTTP_REFERER']); // Redirect back to the post page
+// Rebuild and return the page with updated like state and count
+// This assumes you have the full page logic in a template or function
+ob_start();
+include 'index.php'; // Or wherever your main page template is
+$pageContent = ob_get_clean();
+
+echo $pageContent;
+
+mysqli_stmt_close($stmt);
+mysqli_close($conn);
 exit;
 ?>

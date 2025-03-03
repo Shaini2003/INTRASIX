@@ -108,13 +108,48 @@
     color: #333;
     white-space: nowrap; /* Prevent text wrapping */
 }
-.liked {
-    background-color: black !important;
-    color: white !important;
-    padding: 5px 10px;
-    border-radius: 5px;
+
+.like-form {
+    display: inline-block;
 }
 
-.liked-icon {
-    color: red !important;
+.like {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.like:hover {
+    color: #ff4444;
+}
+
+.like.liked {
+    color: #ff4444;
+}
+
+.like i.ti-heart {
+    font-size: 18px;
+}
+
+.like ins {
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* Animation for like button */
+@keyframes likeAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.like.liked i.ti-heart {
+    animation: likeAnimation 0.3s ease;
 }
