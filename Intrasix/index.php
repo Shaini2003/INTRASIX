@@ -42,16 +42,74 @@ $id = $_SESSION['id'];
 		<div class="responsive-header">
 
 
-			<div class="search-bar">
-				<i class="uil uil-search"></i>
-				<input type="search" placeholder="search" style="border: none;">
-			</div>
+		<div class="search-bar">
+        <i class="uil uil-search"></i>
+        <input type="search" id="searchInput" placeholder="Search by username" style="border: none;">
+    </div>
+
+    <!-- Container for search results -->
+    <div class="search-results" id="searchResults">
+        <!-- Results will be populated here -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        const searchInput = $('#searchInput');
+        const searchResults = $('#searchResults');
+
+        searchInput.on('input', function() {
+            const query = $(this).val().trim();
+
+            if (query.length > 0) {
+                $.ajax({
+                    url: 'search_users.php',
+                    method: 'POST',
+                    data: { search_query: query },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            let html = '<ul class="user-list">';
+                            if (response.users.length > 0) {
+                                response.users.forEach(function(user) {
+                                    html += `
+                                        <li>
+                                            <figure>
+                                                <img src="${user.profile_pic || 'images/default.jpg'}" alt="Profile">
+                                            </figure>
+                                            <div class="user-meta">
+                                                <a href="profile.php?id=${user.id}">${user.name}</a>
+                                            </div>
+                                        </li>
+                                    `;
+                                });
+                            } else {
+                                html += '<li>No users found.</li>';
+                            }
+                            html += '</ul>';
+                            searchResults.html(html).show();
+                        } else {
+                            searchResults.html('<p>Error: ' + response.message + '</p>').show();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        searchResults.html('<p>An error occurred while searching.</p>').show();
+                        console.error('AJAX Error:', status, error);
+                    }
+                });
+            } else {
+                searchResults.hide(); // Hide results when input is empty
+            }
+        });
+    });
+    </script>
 
 
 		</div><!-- responsive header -->
 
 		<div class="topbar stick">
 			<div class="logo">
+			    <a title="" href="#"><img src="images/intrasix-logo.png" alt="" width="70px" height="70px"></a>
 				<a title="" href="#"><img src="images/intrasix.png" alt="" width="70px" height="70px"></a>
 			</div>
 
@@ -347,6 +405,7 @@ $id = $_SESSION['id'];
 						display: flex;
 						justify-content: space-between;
 						transform: translateY(-50%);
+						border-color: #9b59b6;
 					}
 
 					.story-controls button {
@@ -356,6 +415,7 @@ $id = $_SESSION['id'];
 						font-size: 18px;
 						cursor: pointer;
 						border-radius: 5px;
+						border-color: #9b59b6;
 					}
 				</style>
 
@@ -416,7 +476,7 @@ $id = $_SESSION['id'];
 												</li>
 												<li>
 													<i class="ti-mouse-alt"></i>
-													<a href="inbox.html" title="">Inbox</a>
+													<a href="inbox.php" title="">Inbox</a>
 												</li>
 												<li>
 													<i class="ti-user"></i>
@@ -428,7 +488,7 @@ $id = $_SESSION['id'];
 												</li>
 												<li>
 													<i class="ti-user"></i>
-													<a href="timeline-friends.html" title="">friends</a>
+													<a href="friends.php" title="">friends</a>
 												</li>
 												<li>
 													<i class="ti-image"></i>
@@ -446,6 +506,10 @@ $id = $_SESSION['id'];
 													<i class="ti-bell"></i>
 													<a href="notifications.html" title="">Notifications</a>
 												</li>
+												<li>
+													<i class="ti-bell"></i>
+													<a href="review.php" title="">Reviews</a>
+												</li>
 
 												<li>
 													<i class="ti-power-off"></i>
@@ -454,31 +518,36 @@ $id = $_SESSION['id'];
 											</ul>
 										</div><!-- Shortcuts -->
 
-										<!-- HTML/PHP Widget Section -->
+										<!-- HTML/PHP Widget Section (index.php or your main file) -->
 										<div class="widget stick-widget">
 											<h4 class="widget-title">Friends Suggest</h4>
-											<ul class="followers">
+											<ul class="followers" id="suggestionList">
 												<?php
-												// Fetch and display follow suggestions
 												$follow_suggestions = filterFollowSuggestion(getFollowSuggestions());
 
 												if (empty($follow_suggestions)) {
-													echo "<li>No follow suggestions available.</li>";
+													echo "<li>No suggestions available at the moment.</li>";
 												} else {
 													foreach ($follow_suggestions as $suser) {
 												?>
-														<li>
+														<li data-user-id="<?= htmlspecialchars($suser['id']) ?>">
 															<figure>
-																<img src="<?= htmlspecialchars($suser['profile_pic'] ?? 'default.jpg') ?>" alt="Profile Picture">
+																<img src="<?= htmlspecialchars($suser['profile_pic'] ?? 'default.jpg') ?>"
+																	alt="Profile Picture">
 															</figure>
 															<div class="friend-meta">
 																<h4>
-																	<a href="?u=<?= htmlspecialchars($suser['name']) ?>&id=<?= htmlspecialchars($suser['id']) ?>"
+																	<a href="?u=<?= htmlspecialchars($suser['name']) ?>"
 																		title=""><?= htmlspecialchars($suser['name']) ?></a>
 																</h4>
-																<?php if (isset($_SESSION['userdata']['id'])) { ?>
-																	<button class="btn btn-sm btn-primary followbtn"
-																		data-user-id="<?= htmlspecialchars($suser['id']) ?>">Follow</button>
+																<?php if (isset($_SESSION['id'])) {
+																	$isFollowing = checkFollowStatus($suser['id']);
+																?>
+																	<button class="btn"
+																		data-user-id="<?= htmlspecialchars($suser['id']) ?>"
+																		<?= $isFollowing ? 'disabled' : '' ?>>
+																		<?= $isFollowing ? 'Following' : 'Follow' ?>
+																	</button>
 																<?php } ?>
 															</div>
 														</li>
@@ -490,35 +559,25 @@ $id = $_SESSION['id'];
 										</div>
 
 										<?php
-										// Fetch follow suggestions
 										function getFollowSuggestions()
 										{
 											global $conn;
 
-											// Get 10 random users regardless of login status
-											$query = "
-        SELECT id, name, profile_pic 
-        FROM users 
-        ORDER BY RAND() 
-        LIMIT 10
-    ";
-
+											$query = "SELECT id, name, profile_pic FROM users ORDER BY RAND() LIMIT 10";
 											$stmt = $conn->prepare($query);
 											$stmt->execute();
 											$result = $stmt->get_result();
-
 											return $result->fetch_all(MYSQLI_ASSOC);
 										}
 
-										// Filter out already followed users if logged in
 										function filterFollowSuggestion($list)
 										{
-											if (!isset($_SESSION['userdata']['id'])) {
-												return $list; // Return full list if not logged in
+											if (!isset($_SESSION['id'])) {
+												return $list;
 											}
 
 											$filtered_list = [];
-											$current_user = $_SESSION['userdata']['id'];
+											$current_user = $_SESSION['id'];
 
 											foreach ($list as $user) {
 												if ($user['id'] != $current_user && !checkFollowStatus($user['id'])) {
@@ -528,47 +587,45 @@ $id = $_SESSION['id'];
 											return $filtered_list;
 										}
 
-										// Check if the user is already followed
 										function checkFollowStatus($user_id)
 										{
 											global $conn;
 
-											if (!isset($_SESSION['userdata']['id'])) {
-												return false; // No filtering if not logged in
+											if (!isset($_SESSION['id'])) {
+												return false;
 											}
 
-											$current_user = $_SESSION['userdata']['id'];
+											$current_user = $_SESSION['id'];
 
 											$stmt = $conn->prepare("
-        SELECT COUNT(*) as row_count 
+        SELECT COUNT(*) as count 
         FROM follow_list 
-        WHERE follower_id = ? AND user_id = ?
+        WHERE follower_id = ? AND following_id = ?
     ");
 											$stmt->bind_param("ii", $current_user, $user_id);
 											$stmt->execute();
 											$result = $stmt->get_result()->fetch_assoc();
 
-											return $result['row_count'] > 0;
+											return $result['count'] > 0;
 										}
 
-										// Follow a user
 										function followUser($user_id)
 										{
 											global $conn;
 
-											if (!isset($_SESSION['userdata']['id'])) {
+											if (!isset($_SESSION['id'])) {
 												return false;
 											}
 
-											$current_user = $_SESSION['userdata']['id'];
+											$current_user = $_SESSION['id'];
 
 											if (checkFollowStatus($user_id) || $current_user == $user_id) {
 												return false;
 											}
 
 											$stmt = $conn->prepare("
-        INSERT INTO follow_list (follower_id, user_id) 
-        VALUES (?, ?)
+        INSERT INTO follow_list (follower_id, following_id, created_at) 
+        VALUES (?, ?, NOW())
     ");
 											$stmt->bind_param("ii", $current_user, $user_id);
 											return $stmt->execute();
@@ -577,29 +634,88 @@ $id = $_SESSION['id'];
 
 										<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 										<script>
-											document.querySelectorAll('.followbtn').forEach(button => {
-												button.addEventListener('click', function() {
-													const userId = this.getAttribute('data-user-id');
+											document.addEventListener('DOMContentLoaded', function() {
+												const followButtons = document.querySelectorAll('.follow-btn');
 
-													fetch('follow.php', {
-															method: 'POST',
-															headers: {
-																'Content-Type': 'application/x-www-form-urlencoded',
-															},
-															body: 'user_id=' + encodeURIComponent(userId)
-														})
-														.then(response => response.json())
-														.then(data => {
-															if (data.success) {
-																this.textContent = 'Following';
-																this.disabled = true;
-															}
-														})
-														.catch(error => console.error('Error:', error));
+												followButtons.forEach(button => {
+													button.addEventListener('click', function() {
+														const userId = this.getAttribute('data-user-id');
+														const button = this;
+
+														fetch('follow.php', {
+																method: 'POST',
+																headers: {
+																	'Content-Type': 'application/x-www-form-urlencoded',
+																},
+																body: 'following_id=' + encodeURIComponent(userId)
+															})
+															.then(response => {
+																if (!response.ok) {
+																	throw new Error('Network response was not ok: ' + response.statusText);
+																}
+																return response.json();
+															})
+															.then(data => {
+																if (data.success) {
+																	button.textContent = 'Following';
+																	button.disabled = true;
+																	button.classList.remove('btn-primary');
+																	button.classList.add('btn-secondary');
+																} else {
+																	alert(data.message);
+																}
+															})
+															.catch(error => {
+																console.error('Error:', error);
+																alert('An error occurred while following the user: ' + error.message);
+															});
+													});
 												});
 											});
 										</script>
+										<style>
+											.btn{
+												background-color:#9b59b6;
+												color: white;
+											}
+											.follow-btn {
+												transition: all 0.3s ease;
+											}
 
+											.follow-btn:disabled {
+												opacity: 0.7;
+												cursor: not-allowed;
+											}
+
+											.widget.stick-widget {
+												background: #fff;
+												padding: 20px;
+												border-radius: 5px;
+											}
+
+											.followers li {
+												display: flex;
+												align-items: center;
+												padding: 10px 0;
+												border-bottom: 1px solid #eee;
+											}
+
+											.followers li figure {
+												margin-right: 10px;
+											}
+
+											.followers li img {
+												width: 40px;
+												height: 40px;
+												border-radius: 50%;
+												object-fit: cover;
+											}
+
+											.friend-meta h4 {
+												margin: 0;
+												font-size: 14px;
+											}
+										</style>
 
 
 
@@ -938,7 +1054,7 @@ $id = $_SESSION['id'];
 
 																.comment-submit {
 																	padding: 8px 16px;
-																	background-color: purple;
+																	background-color: #9b59b6;
 																	color: white;
 																	border: none;
 																	border-radius: 4px;
@@ -1033,7 +1149,32 @@ $id = $_SESSION['id'];
 										<?php endforeach; ?>
 									</div>
 								</div>
-
+<?php
+function getFollowers() {
+    global $conn;
+    
+    if (!isset($_SESSION['id'])) {
+        return []; // Return empty array if not logged in
+    }
+    
+    $current_user = $_SESSION['id'];
+    
+    $query = "
+        SELECT u.id, u.name, u.profile_pic
+        FROM users u
+        INNER JOIN follow_list fl ON u.id = fl.follower_id
+        WHERE fl.following_id = ?
+        ORDER BY fl.created_at DESC
+    ";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $current_user);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+?>
 
 
 								<div class="col-lg-3">
@@ -1041,11 +1182,17 @@ $id = $_SESSION['id'];
 										<div class="widget friend-list stick-widget">
 											<h4 class="widget-title">Followers</h4>
 											<ul id="follower-list" class="friendz-list">
-												<?php if (!empty($followers)) : ?>
-													<?php foreach ($followers as $follower) : ?>
+												<?php
+												// Fetch followers
+												$followers = getFollowers();
+
+												if (!empty($followers)) {
+													foreach ($followers as $follower) {
+												?>
 														<li>
 															<figure>
-																<img src="<?= htmlspecialchars(!empty($follower['profile_pic']) ? $follower['profile_pic'] : 'images/default.jpg') ?>" alt="Profile Picture">
+																<img src="<?= htmlspecialchars(!empty($follower['profile_pic']) ? $follower['profile_pic'] : 'images/default.jpg') ?>"
+																	alt="Profile Picture">
 																<span class="status f-online"></span>
 															</figure>
 															<div class="friendz-meta">
@@ -1054,15 +1201,18 @@ $id = $_SESSION['id'];
 																</a>
 															</div>
 														</li>
-													<?php endforeach; ?>
-												<?php else : ?>
+													<?php
+													}
+												} else {
+													?>
 													<li><strong>No followers yet.</strong></li>
-												<?php endif; ?>
+												<?php
+												}
+												?>
 											</ul>
 										</div>
 									</aside>
 								</div>
-
 							</div>
 
 						</div>

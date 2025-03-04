@@ -34,7 +34,7 @@
                     <div id="carouselExampleSlidesOnly" class="carousel slide carousel-fade" data-bs-ride="carousel">
                         <div class="carousel-inner">
                             <div class="carousel-item active">
-                                <img src="./images/screenshot1.png" class="d-block" alt="screenshot1">
+                                <img src="./images/screenshot1-Recovered.png" class="d-block" alt="screenshot1">
                             </div>
                             <div class="carousel-item">
                                 <img src="./images/screenshot2.png" class="d-block" alt="screenshot2">

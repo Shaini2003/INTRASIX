@@ -130,7 +130,8 @@ $user = $result->fetch_assoc();
         <div class="container col-9 d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
             <a class="navbar-brand" href="#">
-                <img src="images/intrasix.png" alt="Logo" height="60px"width="60px">
+            <img src="images/intrasix-logo.png" alt="Logo" height="70px"width="70px">
+                <img src="images/intrasix.png" alt="Logo" height="70px"width="70px">
             </a>
            
         </div>
