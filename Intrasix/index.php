@@ -30,6 +30,8 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="css/color.css">
 	<link rel="stylesheet" href="css/responsive.css">
 	<link rel="stylesheet" href="styles.css">
+	<!-- <link rel="stylesheet" href="colorstyle.php"> -->
+
 	
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">

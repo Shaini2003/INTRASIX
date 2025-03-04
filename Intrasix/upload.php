@@ -1,110 +1,60 @@
 <?php
 include 'includes/dbh.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['video'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = $_POST['title'];
     $video = $_FILES['video'];
-    $videoName = basename($video['name']);
-    $videoPath = 'uploads/' . $videoName;
-    $allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-    $allowedExtensions = ['mp4', 'webm', 'ogg'];
 
-    // Get file extension
-    $fileExtension = strtolower(pathinfo($videoName, PATHINFO_EXTENSION));
+    // Debug: Check file upload error
+    if ($video['error'] !== UPLOAD_ERR_OK) {
+        echo "Upload failed with error code: " . $video['error'];
+        exit();
+    }
 
-    try {
-        // Check if the fileinfo extension is loaded
-        if (!extension_loaded('fileinfo')) {
-            throw new Exception("The Fileinfo PHP extension is not enabled. Please enable it in php.ini and restart your web server.");
-        }
+    $uploadDir = 'uploads/';
+    $fileName = basename($video['name']);
+    $targetFile = $uploadDir . time() . '_' . $fileName;
+    $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
-        // Initialize finfo with FILEINFO_MIME_TYPE
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        if (!$finfo) {
-            throw new Exception("Failed to initialize finfo object. Check PHP configuration.");
-        }
+    // Debug: Check directory
+    if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
+        echo "Uploads directory issue: " . (!is_dir($uploadDir) ? "does not exist" : "not writable");
+        exit();
+    }
 
-        // Verify file type using finfo with explicit FILEINFO_MIME_TYPE flag
-        $mimeType = $finfo->file($video['tmp_name'], FILEINFO_MIME_TYPE);
+    // Debug: Check temporary file
+    if (!file_exists($video['tmp_name']) || !is_uploaded_file($video['tmp_name'])) {
+        echo "Temporary file is missing or invalid.";
+        exit();
+    }
 
-        // Debug: Output MIME type for troubleshooting
-        error_log("Detected MIME type: " . $mimeType);
+    $allowedTypes = array('mp4', 'webm', 'ogg');
+    if (in_array($fileType, $allowedTypes)) {
+        if ($video['size'] <= 50000000) {
+            if (move_uploaded_file($video['tmp_name'], $targetFile)) {
+                $sql = "INSERT INTO videos (title, filename, upload_date) VALUES (?, ?, NOW())";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ss", $title, basename($targetFile));
 
-        // Check if the MIME type and extension match allowed types
-        if (!in_array($mimeType, $allowedTypes) || !in_array($fileExtension, $allowedExtensions)) {
-            // Fallback: Manually check file headers if finfo fails or MIME type is unreliable
-            $handle = fopen($video['tmp_name'], 'rb');
-            $header = fread($handle, 4); // Read first 4 bytes for signature
-            fclose($handle);
-
-            $isValidVideo = false;
-            if (strpos($header, "\x00\x00\x01") === 0 || strpos($header, "ftyp") === 0) { // MP4 signature
-                $isValidVideo = $fileExtension === 'mp4' && in_array($mimeType, ['video/mp4', 'application/octet-stream']);
-            } elseif (strpos($header, "WEBM") === 0) { // WebM signature
-                $isValidVideo = $fileExtension === 'webm' && in_array($mimeType, ['video/webm', 'application/octet-stream']);
-            } elseif (strpos($header, "OggS") === 0) { // OGG signature
-                $isValidVideo = $fileExtension === 'ogg' && in_array($mimeType, ['video/ogg', 'application/ogg']);
-            }
-
-            if (!$isValidVideo) {
-                echo "Error: Only MP4, WebM, and OGG videos are allowed. Uploaded file type: " . htmlspecialchars($mimeType) . " (Extension: " . htmlspecialchars($fileExtension) . ")";
-                exit;
-            }
-        }
-
-        // Check file size (e.g., max 100MB)
-        if ($video['size'] > 100 * 1024 * 1024) {
-            echo "Error: Video size must be less than 100MB.";
-            exit;
-        }
-
-        // Check if the uploads directory exists and is writable
-        if (!file_exists('uploads')) {
-            if (!mkdir('uploads', 0777, true)) {
-                throw new Exception("Failed to create uploads directory. Check permissions.");
-            }
-        }
-
-        if (!is_writable('uploads')) {
-            throw new Exception("Uploads directory is not writable. Check permissions (e.g., chmod 755 or 777 on Linux, or adjust Windows permissions).");
-        }
-
-        // Move file to uploads directory
-        if (move_uploaded_file($video['tmp_name'], $videoPath)) {
-            // Save to database
-            $sql = "INSERT INTO videos (title, filename) VALUES (?, ?)";
-            $stmt = $conn->prepare($sql);
-            if (!$stmt) {
-                throw new Exception("Failed to prepare SQL statement: " . $conn->error);
-            }
-
-            $stmt->bind_param("ss", $title, $videoName);
-            if ($stmt->execute()) {
-                header("Location: index.php");
-                exit;
+                if ($stmt->execute()) {
+                    header("Location: index.php?upload=success");
+                    exit();
+                } else {
+                    echo "Database error: " . $conn->error;
+                }
+                $stmt->close();
             } else {
-                echo "Error: Failed to save video metadata. " . $stmt->error;
-                unlink($videoPath); // Clean up the uploaded file if database insertion fails
+                echo "Sorry, there was an error uploading your file.";
             }
-            $stmt->close();
         } else {
-            echo "Error: Failed to upload video. Check directory permissions, disk space, or file size limits.";
+            echo "File is too large. Maximum size is 50MB.";
         }
-    } catch (Exception $e) {
-        echo "Error: " . $e->getMessage();
-        // Clean up if the file was partially uploaded
-        if (file_exists($videoPath)) {
-            unlink($videoPath);
-        }
-        exit;
-    } finally {
-        if (isset($conn) && $conn instanceof mysqli) {
-            $conn->close();
-        }
-        if (isset($finfo)) {
-            unset($finfo); // Clean up finfo object
-        }
+    } else {
+        echo "Invalid file type. Only MP4, WEBM, and OGG files are allowed.";
     }
 } else {
-    echo "Error: No video file uploaded.";
+    echo "No file uploaded.";
 }
+
+$conn->close();
+?>

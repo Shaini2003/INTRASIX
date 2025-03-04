@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Slider</title>
+    <title>Intrasix</title>
     <link rel="stylesheet" href="video.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Video Slider</h1>
+        <h1>Videos</h1>
         
         <!-- Video Upload Form -->
         <form action="upload.php" method="POST" enctype="multipart/form-data" class="upload-form">
             <input type="text" name="title" placeholder="Video Title" required>
             <input type="file" name="video" accept="video/mp4,video/webm,video/ogg" required>
-            <button type="submit">Upload Video</button>
+            <button type="submit" style="background-color: #9b59b6;">Upload Video</button>
         </form>
 
         <!-- Video Slider -->
@@ -37,8 +37,8 @@
                 ?>
             </div>
             <div class="slider-controls">
-                <button id="prev"><i class="fas fa-angle-left"></i></button>
-                <button id="next"><i class="fas fa-angle-right"></i></button>
+                <button id="prev" style="background-color: #9b59b6;"><i class="fas fa-angle-left"></i></button>
+                <button id="next" style="background-color: #9b59b6;"><i class="fas fa-angle-right"></i></button>
             </div>
         </div>
     </div>
