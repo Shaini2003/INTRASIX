@@ -30,6 +30,7 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="css/color.css">
 	<link rel="stylesheet" href="css/responsive.css">
 	<link rel="stylesheet" href="styles.css">
+	
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -496,11 +497,11 @@ $id = $_SESSION['id'];
 												</li>
 												<li>
 													<i class="ti-video-camera"></i>
-													<a href="timeline-videos.html" title="">videos</a>
+													<a href="video.php" title="">videos</a>
 												</li>
 												<li>
-													<i class="ti-comments-smiley"></i>
-													<a href="messages.html" title="">Messages</a>
+												<i class="fa-solid fa-palette"></i>
+													<a href="themes.php" title="">Themes</a>
 												</li>
 												<li>
 													<i class="ti-bell"></i>
@@ -863,7 +864,7 @@ $id = $_SESSION['id'];
 																	<li>
 																		<!-- Click event triggers loading comments -->
 																		<span class="comment-toggle" onclick="toggleComments(<?= $post['id']; ?>)">
-																			<i class="fa-regular fa-comment"></i>
+																			<i class="fa-regular fa-comment" style="color: #9b59b6;"></i>
 																			<ins id="comment-count-<?= $post['id']; ?>">0</ins>
 																		</span>
 																	</li>
@@ -990,7 +991,7 @@ $id = $_SESSION['id'];
 																}
 															</script>
 
-															<style>
+                                                           <style>
 																.container {
 																	max-width: 1200px;
 																	margin: 0 auto;
@@ -1054,16 +1055,14 @@ $id = $_SESSION['id'];
 
 																.comment-submit {
 																	padding: 8px 16px;
-																	background-color: #9b59b6;
+																	
 																	color: white;
 																	border: none;
 																	border-radius: 4px;
 																	cursor: pointer;
 																}
 
-																.comment-submit:hover {
-																	background-color: darkpurple;
-																}
+																
 
 																.comment-toggle {
 																	cursor: pointer;
@@ -1073,6 +1072,7 @@ $id = $_SESSION['id'];
 
 																.comment-toggle i {
 																	margin-right: 5px;
+																	color: #6f42c1; 
 																}
 
 																.comment-toggle ins {
@@ -1141,6 +1141,7 @@ $id = $_SESSION['id'];
 																	}
 																}
 															</style>
+
 
 														</div>
 													</div>

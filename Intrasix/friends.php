@@ -43,20 +43,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow'])) {
     ");
     $stmt->bind_param("ii", $current_user_id, $following_id);
     $stmt->execute();
-    header("Location: inbox.php");
+    header("Location: index.php");
     exit();
 }
 
 // Handle unfollow action
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow back'])) {
     $following_id = intval($_POST['following_id']);
     $stmt = $conn->prepare("
-        DELETE FROM follow_list 
-        WHERE follower_id = ? AND following_id = ?
+        INSERT INTO follow_list (follower_id, following_id, created_at) 
+        VALUES (?, ?, NOW())
     ");
     $stmt->bind_param("ii", $current_user_id, $following_id);
     $stmt->execute();
-    header("Location: inbox.php");
+    header("Location: index.php");
     exit();
 }
 
@@ -80,17 +80,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
         display: flex;
         flex-wrap: wrap; /* Allow wrapping on smaller screens */
         height: 100vh;
-        background: #f4f4f4;
+        background-image: url("images/intrasix-logo.png");
     }
-    .followers-list, .chat-list, .suggested-list {
-        width: 25%;
-        background: rgb(5, 140, 145);
+    .sidebar-container {
+        width: 50%; /* Two equal columns on desktop */
+        display: flex;
+        flex-direction: column;
+    }
+    .followers-list, .suggested-list, .chat-list {
+        background-color: #9b59b6;
         color: white;
         padding: 20px;
         overflow-y: auto;
+        flex: 1; /* Allow equal height */
     }
     .chat-container {
-        width: 50%;
+        width: 25%;
         display: flex;
         flex-direction: column;
         background: #fff;
@@ -113,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
         transition: background 0.3s;
     }
     .chat-list li:hover, .chat-list li.active {
-        background: rgb(109, 3, 100);
+        background: #9b59b6; /* Slightly darker shade for hover to maintain contrast */
     }
     .followers-list img, .chat-list img, .suggested-list img {
         width: 40px;
@@ -137,11 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
         font-size: 14px;
     }
     .follow-btn {
-        background: #2ecc71;
+        background: black;
         color: white;
     }
     .unfollow-btn {
-        background: #e74c3c;
+        background: black;
         color: white;
     }
     .chat-header {
@@ -168,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
     }
     .sent {
         align-self: flex-end;
-        background: #2ecc71;
+        background: #9b59b6;
         color: white;
     }
     .received {
@@ -205,14 +210,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
 
     /* Responsive Styles */
     @media (max-width: 1024px) {
-        .followers-list, .chat-list, .suggested-list {
-            width: 33.33%; /* Three columns on tablets */
+        .sidebar-container {
+            width: 50%; /* Maintain two columns on tablets */
+        }
+        .chat-list {
+            width: 50%;
         }
         .chat-container {
-            width: 100%; /* Full width below other sections */
-            order: 4; /* Move chat container to bottom */
+            width: 50%;
         }
-        .suggested-list img {
+        .suggested-list img, .followers-list img, .chat-list img {
             width: 35px;
             height: 35px;
         }
@@ -223,17 +230,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
     }
 
     @media (max-width: 768px) {
-        .followers-list, .chat-list, .suggested-list {
+        .sidebar-container {
             width: 50%; /* Two columns on smaller tablets */
         }
-        .suggested-list {
-            order: 3; /* Move suggested list below chat list */
+        .chat-list {
+            width: 50%;
         }
-        .suggested-list img {
+        .chat-container {
+            width: 100%;
+            order: 3; /* Move chat container below sidebars */
+        }
+        .suggested-list img, .followers-list img, .chat-list img {
             width: 30px;
             height: 30px;
         }
-        .suggested-list li {
+        .suggested-list li, .followers-list li, .chat-list li {
             padding: 8px;
         }
         .follow-btn, .unfollow-btn {
@@ -243,21 +254,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
     }
 
     @media (max-width: 480px) {
-        .followers-list, .chat-list, .suggested-list {
-            width: 100%; /* Full width on mobile */
+        .sidebar-container {
+            width: 100%; /* Full width on mobile, stack vertically */
         }
-        .suggested-list img {
+        .followers-list, .suggested-list, .chat-list {
+            width: 100%;
+        }
+        .chat-container {
+            width: 100%;
+            order: 3;
+        }
+        .suggested-list img, .followers-list img, .chat-list img {
             width: 25px;
             height: 25px;
         }
-        .suggested-list li {
+        .suggested-list li, .followers-list li, .chat-list li {
             padding: 6px;
             flex-wrap: wrap; /* Allow wrapping if content is too long */
         }
-        .suggested-list li div {
+        .suggested-list li div, .followers-list li div, .chat-list li div {
             flex: 1 1 70%; /* Name takes most space */
         }
-        .suggested-list li form {
+        .suggested-list li form, .followers-list li form {
             flex: 1 1 30%; /* Button takes less space */
             text-align: right;
         }
@@ -290,15 +308,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['unfollow'])) {
 </div>
 
 
-
-
 <!-- Suggested Followers -->
-<div class="suggested-list">
-    <h3>Suggested Followers</h3>
+<div class="suggested-list" style="background-color: white; font-weight: bold;">
+    <h3 style="color: black;font-weight: bold;">Suggested Friends</h3>
     <ul>
         <?php while ($suggest = $suggested->fetch_assoc()): ?>
             <li>
-                <div style="display: flex; align-items: center;">
+                <div style="display: flex; align-items: center;color: black;">
                     <img src="<?= htmlspecialchars($suggest['profile_pic'] ?? 'images/default.jpg') ?>" 
                          alt="<?= htmlspecialchars($suggest['name']) ?>'s profile">
                     <span><?= htmlspecialchars($suggest['name']) ?></span>

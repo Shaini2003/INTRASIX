@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
         }
         .chat-list {
             width: 25%;
-            background: rgb(140, 5, 145);
+            background: rgb(175, 30, 180);
             color: white;
             padding: 30px;
             overflow-y: auto;
@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
             width: 100%;
         }
         .chat-list li:hover, .chat-list li.active {
-            background: rgb(109, 3, 100);
+            background: rgb(216, 167, 212);
         }
         .chat-list img {
             width: 40px;
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
             border-left: 1px solid #ddd;
         }
         .chat-header {
-            background: rgb(245, 154, 204);
+            background: #9b59b6;
             color: white;
             padding: 15px;
             font-size: 18px;
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            background: gray;
+            background: #95a5a6;
         }
         .chat-messages div {
             max-width: 60%;
@@ -139,12 +139,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
         }
         .sent {
             align-self: flex-end;
-            background: #2ecc71;
+            background: #2c3e50;
             color: white;
         }
         .received {
             align-self: flex-start;
-            background: #ffffff;
+            background:rgb(255, 255, 255);
             border: 1px solid #ddd;
         }
         .chat-input {
@@ -180,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
 
 <!-- Chat List -->
 <div class="chat-list">
+<a href="index.php" style="text-decoration: none; font-weight: bold;">←Back</a>
     <h3>Chat List</h3>
     <ul>
         <?php while ($friend = $friends->fetch_assoc()): ?>

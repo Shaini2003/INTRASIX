@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,53 +58,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title><?php echo htmlspecialchars($profile['name']); ?>'s Profile</title>
     <style>
         :root {
-            --primary-color: #007bff;
+            --primary-color: #6f42c1;
+            /* Purple as primary color */
             --secondary-color: #6c757d;
             --background-color: #f8f9fa;
         }
+
         body {
             background-color: var(--background-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
         }
+
         .profile-container {
             background: white;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .profile-img {
             border: 4px solid white;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+        .serach {
+            border: 1px solid var(--primary-color);
+            /* Purple border for search input */
+            border-radius: 20px;
+            /* Rounded for consistency */
+            padding: 8px 15px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .serach-btn {
+            background-color: var(--primary-color) !important;
+            /* Solid purple background for search button */
+            border-color: var(--primary-color) !important;
+            /* Matching purple border */
+            color: white !important;
+            /* White text for contrast */
+            border-radius: 20px;
+            /* Rounded pill shape to match search input */
+            padding: 8px 15px;
+            /* Consistent padding with search input */
+            font-size: 16px;
+            /* Match search input font size */
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+            /* Smooth transitions */
+        }
+
+        .serach-btn:hover {
+            background-color: #5a2d9e !important;
+            /* Darker purple on hover */
+            border-color: #5a2d9e !important;
+            /* Matching darker purple border */
+            color: white !important;
+            /* Maintain white text */
+        }
+
+        .serach:focus {
+            border-color: var(--primary-color);
+            /* Maintain purple on focus */
+            box-shadow: 0 0 5px rgba(111, 66, 193, 0.5);
+            /* Light purple shadow on focus */
+            outline: none;
+        }
+
+        .btn-primary,
+        .btn-danger {
+            background-color: var(--primary-color) !important;
+            /* Purple for buttons */
+            border-color: var(--primary-color) !important;
+        }
+
+        .btn-primary:hover,
+        .btn-danger:hover {
+            background-color: #5a2d9e !important;
+            /* Darker purple on hover */
+            border-color: #5a2d9e !important;
+        }
+
+        .nav-link {
+            color: #333 !important;
+            /* Ensure nav links remain readable */
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white border">
         <div class="container col-9 d-flex justify-content-between">
             <div class="d-flex justify-content-between col-8 align-items-center">
                 <a class="navbar-brand" href="index.php">
+                    <img src="images/intrasix-logo.png" alt="Logo" width="70px" height="70px">
                     <img src="images/intrasix.png" alt="Logo" width="70px" height="70px">
                 </a>
                 <form class="d-flex w-50" action="profile.php" method="GET">
-                    <input class="form-control me-2 rounded-pill" type="search" name="username" 
-                           placeholder="Search for someone..." aria-label="Search" required>
-                    <button class="btn btn-outline-primary rounded-pill" type="submit">Search</button>
+                    <input class="serach" type="search" name="username"
+                        placeholder="Search for someone..." aria-label="Search" required>
+                    <button class="serach-btn" type="submit">Search</button>
                 </form>
             </div>
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link text-dark" href="index.php"><i class="bi bi-house-door-fill"></i></a></li>
                 <li class="nav-item"><a class="nav-link text-dark" href="post.php"><i class="bi bi-plus-square-fill"></i></a></li>
                 <li class="nav-item"><a class="nav-link text-dark" href="#"><i class="bi bi-bell-fill"></i></a></li>
-                <li class="nav-item"><a class="nav-link text-dark" href="#"><i class="bi bi-chat-right-dots-fill"></i></a></li>
+                <li class="nav-item"><a class="nav-link text-dark" href="inbox.php"><i class="bi bi-chat-right-dots-fill"></i></a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                         <img src="<?php echo htmlspecialchars($current_user['profile_pic'] ?? 'default.jpg'); ?>"
-                             alt="Profile" height="30" class="rounded-circle border">
+                            alt="Profile" height="30" class="rounded-circle border">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
                         <li><a class="dropdown-item" href="#">Account Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
@@ -115,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="col-12 profile-container p-4 d-flex gap-5">
             <div class="col-4 d-flex justify-content-end align-items-start">
                 <img src="<?php echo htmlspecialchars($profile['profile_pic'] ?? 'default.jpg'); ?>"
-                     class="profile-img rounded-circle my-3" style="height:170px;" alt="Profile">
+                    class="profile-img rounded-circle my-3" style="height:170px;" alt="Profile">
             </div>
             <div class="col-8">
                 <div class="d-flex flex-column">
@@ -147,8 +219,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <?php if (!$is_own_profile): ?>
                         <form method="POST" class="d-flex gap-2 align-items-center my-1">
-                            <button type="submit" name="toggle_follow" 
-                                    class="btn btn-sm <?php echo $is_following ? 'btn-danger' : 'btn-primary'; ?>">
+                            <button type="submit" name="toggle_follow"
+                                class="btn btn-sm <?php echo $is_following ? 'btn-danger' : 'btn-primary'; ?>">
                                 <?php echo $is_following ? 'Unfollow' : 'Follow'; ?>
                             </button>
                         </form>
@@ -160,12 +232,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h3 class="border-bottom py-2 mt-4">Posts</h3>
         <div class="gallery d-flex flex-wrap justify-content-center gap-3 mb-4">
             <?php foreach ($profile_posts as $post): ?>
-                <img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" 
-                     width="300px" height="300px" class="rounded" alt="Post">
+                <img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>"
+                    width="300px" height="300px" class="rounded" alt="Post">
             <?php endforeach; ?>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
