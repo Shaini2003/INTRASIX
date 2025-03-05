@@ -402,6 +402,87 @@ jQuery(".post-comt-box textarea").on("keydown", function(event) {
 });//document ready end
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationLink = document.getElementById('notificationLink');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const unreadCount = document.getElementById('unreadCount');
+    const messagesLink = document.getElementById('messagesLink');
+    const messagesDropdown = document.getElementById('messagesDropdown');
+    const unreadMessagesCount = document.getElementById('unreadMessagesCount');
+
+    // Load Notifications
+    function loadNotifications() {
+        console.log('Fetching notifications...');
+        fetch('get_notifications.php')
+            .then(response => {
+                if (!response.ok) throw new Error('Notification fetch failed');
+                return response.text();
+            })
+            .then(html => {
+                console.log('Notifications:', html);
+                notificationDropdown.innerHTML = html;
+                const unread = html.match(/(\d+) New Notifications/);
+                unreadCount.textContent = unread ? unread[1] : '0';
+            })
+            .catch(error => {
+                console.error('Notification error:', error);
+                notificationDropdown.innerHTML = '<div class="notification-header">Error loading</div>';
+            });
+    }
+
+    // Load Messages
+    function loadMessages() {
+        console.log('Fetching messages...');
+        fetch('get_messages.php')
+            .then(response => {
+                if (!response.ok) throw new Error('Messages fetch failed');
+                return response.text();
+            })
+            .then(html => {
+                console.log('Messages:', html);
+                messagesDropdown.innerHTML = html;
+                const unread = html.match(/(\d+) New Messages/);
+                unreadMessagesCount.textContent = unread ? unread[1] : '0';
+            })
+            .catch(error => {
+                console.error('Messages error:', error);
+                messagesDropdown.innerHTML = '<span>Error loading messages</span>';
+            });
+    }
+
+    // Initial load
+    loadNotifications();
+    loadMessages();
+
+    // Toggle Notifications
+    notificationLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const isVisible = notificationDropdown.style.display === 'block';
+        notificationDropdown.style.display = isVisible ? 'none' : 'block';
+        messagesDropdown.style.display = 'none'; // Hide messages if open
+        if (!isVisible) loadNotifications();
+    });
+
+    // Toggle Messages
+    messagesLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const isVisible = messagesDropdown.style.display === 'block';
+        messagesDropdown.style.display = isVisible ? 'none' : 'block';
+        notificationDropdown.style.display = 'none'; // Hide notifications if open
+        if (!isVisible) loadMessages();
+    });
+
+    // Hide dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!notificationLink.contains(e.target) && !notificationDropdown.contains(e.target)) {
+            notificationDropdown.style.display = 'none';
+        }
+        if (!messagesLink.contains(e.target) && !messagesDropdown.contains(e.target)) {
+            messagesDropdown.style.display = 'none';
+        }
+    });
+});
+
 
 
 

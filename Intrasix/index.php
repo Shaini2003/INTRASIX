@@ -30,7 +30,7 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="css/color.css">
 	<link rel="stylesheet" href="css/responsive.css">
 	<link rel="stylesheet" href="styles.css">
-	<!-- <link rel="stylesheet" href="colorstyle.php"> -->
+	<link rel="stylesheet" href="colorstyle.php">
 
 
 	<!--ICONSCOUT CDN-->
@@ -75,6 +75,44 @@ $id = $_SESSION['id'];
 		document.addEventListener('click', function(e) {
 			if (!notificationLink.contains(e.target) && !notificationDropdown.contains(e.target)) {
 				notificationDropdown.style.display = 'none';
+			}
+		});
+	});
+
+	document.addEventListener('DOMContentLoaded', function() {
+		const messagesLink = document.getElementById('messagesLink');
+		const messagesDropdown = document.getElementById('messagesDropdown');
+		const messagesCount = document.getElementById('messagesCount');
+
+		function loadMessages() {
+			fetch('get_messages.php')
+				.then(response => response.text())
+				.then(html => {
+					messagesDropdown.innerHTML = html;
+					const count = html.match(/(\d+) New Messages/);
+					messagesCount.textContent = count ? count[1] : '0';
+				})
+				.catch(error => {
+					console.error('Error:', error);
+					messagesDropdown.innerHTML = '<span>Error loading messages</span>';
+				});
+		}
+
+		// Load initially
+		loadMessages();
+
+		// Toggle dropdown
+		messagesLink.addEventListener('click', function(e) {
+			e.preventDefault();
+			messagesDropdown.style.display =
+				messagesDropdown.style.display === 'block' ? 'none' : 'block';
+			if (messagesDropdown.style.display === 'block') loadMessages();
+		});
+
+		// Hide when clicking outside
+		document.addEventListener('click', function(e) {
+			if (!messagesLink.contains(e.target) && !messagesDropdown.contains(e.target)) {
+				messagesDropdown.style.display = 'none';
 			}
 		});
 	});
@@ -136,12 +174,22 @@ $id = $_SESSION['id'];
 						</div>
 					</li>
 					<!-- Rest of your setting-area content (Messages) -->
+					<li>
+						<a href="#" title="Messages" data-ripple="" id="messagesLink">
+							<i class="ti-comment"></i>
+							<span id="unreadMessagesCount">0</span>
+						</a>
+						<div class="dropdowns" id="messagesDropdown">
+							<span>Loading...</span>
+						</div>
+					</li>
+					</li>
 				</ul>
 
 			</div>
 			</ul>
 
-			<span class="ti-menu main-menu" data-ripple=""></span>
+
 		</div>
 	</div><!-- topbar -->
 
@@ -231,7 +279,7 @@ $id = $_SESSION['id'];
 
 					echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', ' . htmlspecialchars(json_encode($story_ids)) . ', true)">
             <img src="' . htmlspecialchars($story_images[0]) . '" alt="Story">
-            <div class="story-name">(Your Stories)</div>
+            <div class="story-name">(Your)</div>
           </div>';
 				}
 
@@ -385,6 +433,11 @@ $id = $_SESSION['id'];
 					cursor: pointer;
 					border-radius: 5px;
 				}
+
+				.story-name {
+					color: #9b59b6;
+					font-weight: bold;
+				}
 			</style>
 		</div>
 
@@ -419,10 +472,7 @@ $id = $_SESSION['id'];
 												<i class="ti-user"></i>
 												<a href="friends.php" title="">friends</a>
 											</li>
-											<li>
-												<i class="ti-image"></i>
-												<a href="timeline-photos.html" title="">images</a>
-											</li>
+
 											<li>
 												<i class="ti-video-camera"></i>
 												<a href="video.php" title="">videos</a>
@@ -439,7 +489,10 @@ $id = $_SESSION['id'];
 												<i class="ti-bell"></i>
 												<a href="review.php" title="">Reviews</a>
 											</li>
-
+											<li>
+												<i class="fa-brands fa-bots"></i>
+												<a href="timeline-photos.html" title="">Chat Bot</a>
+											</li>
 											<li>
 												<i class="ti-power-off"></i>
 												<a href="landing.html" title="">Logout</a>
