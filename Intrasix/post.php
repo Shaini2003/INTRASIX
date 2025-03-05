@@ -1,149 +1,168 @@
+<?php
+session_start();
+include("includes/dbh.php"); // Database connection
+
+// Fetch posts from the database only for the logged-in user
+if (isset($_SESSION['id'])) {
+    $user_id = $_SESSION['id'];
+    $query = "SELECT * FROM posts WHERE user_id = $user_id ORDER BY created_at DESC"; 
+    $result = mysqli_query($conn, $query);
+} else {
+    die("Unauthorized access");
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Posts</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <title>Add New Post</title>
     <style>
+        /* Custom styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 50px;
+        }
+
         .modal-content {
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-            border: none;
+            background-color: #ffffff;
         }
 
-        .modal-header {
-            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        .post {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .post:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .post img {
+            max-width: 200px; /* Medium size for the image */
+            border-radius: 8px;
+            margin-right: 20px;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
             color: white;
-            border-radius: 15px 15px 0 0;
-            padding: 1.5rem;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
 
-        .modal-title {
-            font-weight: 600;
-            letter-spacing: 0.5px;
+        .delete-btn:hover {
+            background-color: #c0392b;
         }
 
-        .btn-close {
-            filter: invert(1);
-            opacity: 0.8;
-        }
-
-        .modal-body {
-            padding: 2rem;
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         .preview-container {
-            position: relative;
-            width: 100%;
-            height: 250px; /* Fixed height for the preview */
-            overflow: hidden;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            background: #f8f9fa; /* Light background for empty state */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            text-align: center;
+            margin-bottom: 15px;
         }
 
         .preview-img {
-            max-height: 300px;
-            object-fit: cover;
-            transition: all 0.3s ease;
-            display: none; /* Hidden by default until an image is selected */
-        }
-
-        .preview-img.show {
-            display: block; /* Show when an image is loaded */
-        }
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #6e8efb;
-            box-shadow: 0 0 0 0.2rem rgba(110, 142, 251, 0.25);
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #495057;
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
+            max-width: 100%;
             max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
-        .modal-footer {
-            padding: 1rem 2rem;
-            border-top: none;
+        .form-control {
+            margin-bottom: 10px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #6e8efb, #a777e3);
-            border: none;
-            padding: 0.65rem 1.5rem;
-            border-radius: 10px;
-            transition: transform 0.2s ease;
+        .modal-header, .modal-body {
+            padding: 20px;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
+        .modal-title {
+            font-size: 1.5rem;
+            color: #333;
         }
 
-        .btn-secondary {
-            border-radius: 10px;
-            padding: 0.65rem 1.5rem;
-            background: #e9ecef;
-            color: #495057;
-            border: none;
+        .container {
+            width: 80%;
+            margin: 0 auto;
         }
 
-        @media (max-width: 576px) {
-            .modal-dialog {
-                margin: 1rem;
-            }
-            
-            .modal-body {
-                padding: 1.5rem;
-            }
+        /* Adjust for alignment */
+        .post-content {
+            flex-grow: 1;
+        }
 
-            .preview-container {
-                height: 200px; /* Smaller height on mobile */
-            }
+        .post-actions {
+            text-align: right;
         }
     </style>
 </head>
 <body>
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Post</h5>
-                <button type="button"  id="closeModalBtn"class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-4 preview-container">
-                    <img src="" class="preview-img" id="imagePreview" alt="Post preview">
+
+    <div class="container">
+        <!-- Add New Post Modal -->
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Post</h5>
+                    <button type="button"  id="closeModalBtn" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="post" action="add_posts.php" enctype="multipart/form-data">
-                    <div class="mb-4">
-                        <input class="form-control" name="post_img" type="file" id="formFile" accept="image/*">
+                <div class="modal-body">
+                    <div class="mb-4 preview-container">
+                        <img src="" class="preview-img" id="imagePreview" alt="Post preview">
                     </div>
-                    <div class="mb-3">
-                        <label for="postCaption" class="form-label">Say Something</label>
-                        <textarea name="post_text" class="form-control" id="postCaption" rows="3" placeholder="What's on your mind?"></textarea>
-                    </div>
-                <button type="submit" class="btn btn-primary">Post</button>
-            
-                </form>
+                    <form method="post" action="add_posts.php" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <input class="form-control" name="post_img" type="file" id="formFile" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="postCaption" class="form-label">Say Something</label>
+                            <textarea name="post_text" class="form-control" id="postCaption" rows="3" placeholder="What's on your mind?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Post</button>
+                    </form>
+                </div>
             </div>
-          
         </div>
+
+        <h2>Your Posts</h2>
+
+        <!-- Display the user's posts -->
+        <?php while ($post = mysqli_fetch_assoc($result)): ?>
+            <div class="post">
+                <!-- Left side: Post Image -->
+                <img src="images/posts/<?= htmlspecialchars($post['post_img']); ?>" alt="Post Image">
+
+                <!-- Right side: Post Content and Delete button -->
+                <div class="post-content">
+                    <p><?= htmlspecialchars($post['post_text']); ?></p>
+                </div>
+                <div class="post-actions">
+                    <!-- Delete button: Show only for the logged-in user's posts -->
+                    <form action="delete_post.php" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?')">
+                        <input type="hidden" name="post_id" value="<?= $post['id']; ?>">
+                        <button type="submit" class="delete-btn">Delete Post</button>
+                    </form>
+                </div>
+            </div>
+        <?php endwhile; ?>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -170,7 +189,6 @@
 
         // Close button redirect to home page
         document.getElementById('closeModalBtn').addEventListener('click', function() {
-            addPostModal.hide(); // Hide the modal
             window.location.href = 'index.php'; // Redirect to home page (adjust URL as needed)
         });
     </script>

@@ -45,61 +45,63 @@ $id = $_SESSION['id'];
 		<div class="responsive-header">
 
 
-		<div class="search-bar">
-        <i class="uil uil-search"></i>
-        <input type="search" id="searchInput" placeholder="Search by username" style="border: none;">
-        <div id="searchResults" class="search-results"></div>
-    </div>
+			<div class="search-bar">
+				<i class="uil uil-search"></i>
+				<input type="search" id="searchInput" placeholder="Search by username" style="border: none;">
+				<div id="searchResults" class="search-results"></div>
+			</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#searchInput').on('input', function() {
-                const query = $(this).val().trim();
-                const $resultsContainer = $('#searchResults');
+			<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+			<script>
+				$(document).ready(function() {
+					$('#searchInput').on('input', function() {
+						const query = $(this).val().trim();
+						const $resultsContainer = $('#searchResults');
 
-                if (query.length < 1) {
-                    $resultsContainer.hide();
-                    return;
-                }
+						if (query.length < 1) {
+							$resultsContainer.hide();
+							return;
+						}
 
-                $.ajax({
-                    url: 'search.php',
-                    method: 'GET',
-                    data: { q: query },
-                    dataType: 'json',
-                    success: function(data) {
-                        $resultsContainer.empty();
-                        if (data.length > 0) {
-                            data.forEach(user => {
-                                const resultItem = `
+						$.ajax({
+							url: 'search.php',
+							method: 'GET',
+							data: {
+								q: query
+							},
+							dataType: 'json',
+							success: function(data) {
+								$resultsContainer.empty();
+								if (data.length > 0) {
+									data.forEach(user => {
+										const resultItem = `
                                     <div class="result-item">
                                         <img src="${user.profile_pic || 'default.jpg'}" alt="Profile">
                                         <a href="profile.php?id=${user.id}">${user.username}</a>
                                     </div>
                                 `;
-                                $resultsContainer.append(resultItem);
-                            });
-                            $resultsContainer.show();
-                        } else {
-                            $resultsContainer.hide();
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX Error:', status, error);
-                    }
-                });
-            });
+										$resultsContainer.append(resultItem);
+									});
+									$resultsContainer.show();
+								} else {
+									$resultsContainer.hide();
+								}
+							},
+							error: function(xhr, status, error) {
+								console.error('AJAX Error:', status, error);
+							}
+						});
+					});
 
-            // Hide results when clicking outside
-            $(document).on('click', function(event) {
-                if (!$(event.target).closest('.search-bar').length) {
-                    $('#searchResults').hide();
-                }
-            });
-        });
-    </script>
-    
+					// Hide results when clicking outside
+					$(document).on('click', function(event) {
+						if (!$(event.target).closest('.search-bar').length) {
+							$('#searchResults').hide();
+						}
+					});
+				});
+			</script>
+
 
 		</div><!-- responsive header -->
 
@@ -275,7 +277,7 @@ $id = $_SESSION['id'];
 			<div><?php
 					include 'includes/dbh.php'; // Include database connection
 
-					// ** Function to fetch grouped stories **
+					// ** Function to fetch all stories grouped by users (except logged-in user) **
 					function getGroupedStories($logged_user_id)
 					{
 						global $conn;
@@ -284,19 +286,38 @@ $id = $_SESSION['id'];
 							die("❌ Error: MySQL connection is closed!");
 						}
 
-						// Fetch stories grouped by user
-						$sql = "SELECT users.id as user_id, users.name, GROUP_CONCAT(stories.story_img ORDER BY stories.created_at DESC) AS story_imgs 
+						// Fetch stories grouped by user (excluding logged-in user)
+						$sql = "SELECT users.id as user_id, users.name, 
+                   GROUP_CONCAT(stories.story_img ORDER BY stories.created_at DESC) AS story_imgs 
             FROM stories 
             JOIN users ON stories.user_id = users.id 
+            WHERE users.id != ?
             GROUP BY users.id 
             ORDER BY MAX(stories.created_at) DESC";
 
-						$result = $conn->query($sql);
-
-						return $result;
+						$stmt = $conn->prepare($sql);
+						$stmt->bind_param("i", $logged_user_id);
+						$stmt->execute();
+						return $stmt->get_result();
 					}
 
-					// Fix: Start session only if it's not already active
+					// ** Function to fetch the logged-in user's stories **
+					function getUserStories($logged_user_id)
+					{
+						global $conn;
+
+						if (!$conn) {
+							die("❌ Error: MySQL connection is closed!");
+						}
+
+						$sql = "SELECT id, story_img FROM stories WHERE user_id = ? ORDER BY created_at DESC";
+						$stmt = $conn->prepare($sql);
+						$stmt->bind_param("i", $logged_user_id);
+						$stmt->execute();
+						return $stmt->get_result();
+					}
+
+					// Start session if not started
 					if (session_status() === PHP_SESSION_NONE) {
 						session_start();
 					}
@@ -308,7 +329,8 @@ $id = $_SESSION['id'];
 						die("❌ Error: User not logged in.");
 					}
 
-					// ** Fetch grouped stories **
+					// ** Fetch user's stories & other users' stories **
+					$user_stories_result = getUserStories($logged_user_id);
 					$stories_result = getGroupedStories($logged_user_id);
 
 					// ** HTML Output **
@@ -325,16 +347,31 @@ $id = $_SESSION['id'];
         <div class="story-name">Upload</div>
       </div>';
 
-					// ** Display Stories (One per User) **
+					// ** Display Logged-in User's Stories (With Delete Option) **
+					if ($user_stories_result->num_rows > 0) {
+						$story_images = [];
+						$story_ids = [];
+
+						while ($row = $user_stories_result->fetch_assoc()) {
+							$story_ids[] = $row['id'];
+							$story_images[] = $row['story_img'];
+						}
+
+						echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', ' . htmlspecialchars(json_encode($story_ids)) . ', true)">
+            <img src="' . htmlspecialchars($story_images[0]) . '" alt="Story">
+            <div class="story-name">(Your Stories)</div>
+          </div>';
+					}
+
+					// ** Display Other Users' Stories (Without Delete Option) **
 					if ($stories_result && $stories_result->num_rows > 0) {
 						while ($row = $stories_result->fetch_assoc()) {
-							// Convert the concatenated story images into an array
 							$story_images = explode(",", $row['story_imgs']);
 							$first_story = htmlspecialchars($story_images[0]); // Show only the latest story as thumbnail
 
-							echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', \'' . htmlspecialchars($row['name']) . '\')">
+							echo '<div class="story" onclick="openUserStories(' . htmlspecialchars(json_encode($story_images)) . ', null, false)">
                 <img src="' . $first_story . '" alt="Story">
-                <div class="story-name">' . htmlspecialchars($row['name']) . ($row['user_id'] == $logged_user_id ? " (You)" : "") . '</div>
+                <div class="story-name">' . htmlspecialchars($row['name']) . '</div>
               </div>';
 						}
 					} else {
@@ -349,14 +386,79 @@ $id = $_SESSION['id'];
 					<span class="close" onclick="closeStory()">&times;</span>
 					<img class="modal-content" id="storyImage">
 					<div id="storyCaption"></div>
+					<form id="deleteStoryForm" action="delete_story.php" method="post">
+						<input type="hidden" name="story_id" id="storyIdInput">
+						<button type="submit" id="deleteBtn" class="delete-btn">🗑 Delete</button>
+					</form>
 					<div class="story-controls">
 						<button onclick="prevStory()">&#10094; Prev</button>
 						<button onclick="nextStory()">Next &#10095;</button>
 					</div>
 				</div>
 
-				<!-- CSS for Modal -->
+				<!-- JavaScript for Story Navigation & Deletion -->
+				<script>
+					let storyImages = [];
+					let storyIds = [];
+					let currentStoryIndex = 0;
+					let isUserStory = false;
+
+					function openUserStories(images, ids, userStory) {
+						storyImages = images;
+						storyIds = ids;
+						currentStoryIndex = 0;
+						isUserStory = userStory;
+						showStory();
+					}
+
+					function showStory() {
+						if (storyImages.length > 0) {
+							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
+							document.getElementById("storyModal").style.display = "block";
+
+							if (isUserStory) {
+								document.getElementById("deleteBtn").style.display = "block";
+								document.getElementById("storyIdInput").value = storyIds[currentStoryIndex];
+							} else {
+								document.getElementById("deleteBtn").style.display = "none";
+							}
+						}
+					}
+
+					function closeStory() {
+						document.getElementById("storyModal").style.display = "none";
+					}
+
+					function nextStory() {
+						if (currentStoryIndex < storyImages.length - 1) {
+							currentStoryIndex++;
+							showStory();
+						}
+					}
+
+					function prevStory() {
+						if (currentStoryIndex > 0) {
+							currentStoryIndex--;
+							showStory();
+						}
+					}
+				</script>
+
+				<!-- CSS for Delete Button -->
 				<style>
+					.delete-btn {
+						background: red;
+						color: white;
+						border: none;
+						padding: 10px;
+						cursor: pointer;
+						border-radius: 5px;
+						font-size: 14px;
+						display: none;
+						/* Hide by default */
+						margin: 10px auto;
+					}
+
 					.modal {
 						display: none;
 						position: fixed;
@@ -401,7 +503,6 @@ $id = $_SESSION['id'];
 						display: flex;
 						justify-content: space-between;
 						transform: translateY(-50%);
-						border-color: #9b59b6;
 					}
 
 					.story-controls button {
@@ -411,48 +512,8 @@ $id = $_SESSION['id'];
 						font-size: 18px;
 						cursor: pointer;
 						border-radius: 5px;
-						border-color: #9b59b6;
 					}
 				</style>
-
-				<!-- JavaScript for Story Navigation -->
-				<script>
-					let storyImages = [];
-					let currentStoryIndex = 0;
-
-					function openUserStories(images, userName) {
-						storyImages = images;
-						currentStoryIndex = 0;
-						showStory(userName);
-					}
-
-					function showStory(userName) {
-						if (storyImages.length > 0) {
-							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-							document.getElementById("storyCaption").innerHTML = userName;
-							document.getElementById("storyModal").style.display = "block";
-						}
-					}
-
-					function closeStory() {
-						document.getElementById("storyModal").style.display = "none";
-					}
-
-					function nextStory() {
-						if (currentStoryIndex < storyImages.length - 1) {
-							currentStoryIndex++;
-							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-						}
-					}
-
-					function prevStory() {
-						if (currentStoryIndex > 0) {
-							currentStoryIndex--;
-							document.getElementById("storyImage").src = storyImages[currentStoryIndex];
-						}
-					}
-				</script>
-
 			</div>
 
 			<div class="gap gray-bg">

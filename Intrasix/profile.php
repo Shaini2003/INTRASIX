@@ -45,31 +45,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !
         exit;
     }
 }
+
+// Add this after existing variable declarations
+$is_blocking = !$is_own_profile && isBlocking($current_user['id'], $profile['id']);
+
+// Handle block/unblock
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_block']) && !$is_own_profile) {
+    $success = toggleBlock($current_user['id'], $profile['id']);
+    if ($success) {
+        header("Location: profile.php?id=" . $profile['id']);
+        exit;
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <title><?php echo htmlspecialchars($profile['username']); ?> | Intrasix</title>
+    <title>Intrasix</title>
     <style>
         body {
             background-color: #fafafa;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
         .profile-container {
             max-width: 935px;
             margin: 30px auto;
             padding: 0 20px;
         }
+
         .profile-header {
             display: flex;
             align-items: center;
             margin-bottom: 44px;
         }
+
         .profile-pic {
             width: 150px;
             height: 150px;
@@ -77,62 +93,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !
             margin-right: 100px;
             object-fit: cover;
         }
+
         .profile-info {
             flex-grow: 1;
         }
+
         .username-row {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
         }
+
         .username {
             font-size: 28px;
             font-weight: 300;
             margin-right: 20px;
         }
+
         .follow-btn {
-            background-color:#9b59b6;
+            background-color: #0984e3;
             color: white;
             border: none;
             padding: 5px 15px;
             border-radius: 4px;
             font-weight: 600;
         }
+
         .follow-btn.unfollow {
             background-color: #fff;
             color: #262626;
             border: 1px solid #dbdbdb;
         }
+
         .stats {
             display: flex;
             gap: 40px;
             margin-bottom: 20px;
+
         }
+
         .stats span {
             font-size: 16px;
         }
+
         .stats span b {
             font-weight: 600;
         }
+
         .bio {
             font-size: 16px;
             line-height: 24px;
         }
+
         .posts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 28px;
         }
+
         .post-img {
             width: 100%;
             height: 293px;
             object-fit: cover;
             border-radius: 4px;
         }
+
         .navbar {
             border-bottom: 1px solid #dbdbdb;
             background-color: #fff;
         }
+
         .search-bar {
             background-color: #efefef;
             border: none;
@@ -140,15 +170,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !
             padding: 7px 15px;
             width: 215px;
         }
+
+        .stas-btn {
+            background-color: #9b59b6;
+            color: white;
+            border-radius: 2px;
+            border: none;
+        }
+
+        .block-btn {
+            background-color: #dc3545;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 600;
+            /* Red color for block */
+        }
+
+        .follow-btn.unfollow.block {
+            background-color: #fff;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
             <a class="navbar-brand" href="index.php">
-             
+
                 <a title="" href="#"><img src="images/intrasix-logo.png" alt="" width="70px" height="70px"></a>
-				<a title="" href="#"><img src="images/Name.png" alt="" width="70px" height="70px"></a>
+                <a title="" href="#"><img src="images/Name.png" alt="" width="70px" height="70px"></a>
             </a>
             <form class="d-flex mx-auto" action="profile.php" method="GET">
                 <input class="search-bar" type="search" name="username" placeholder="Search" required>
@@ -181,12 +234,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !
                                 <?php echo $is_following ? 'Following' : 'Follow'; ?>
                             </button>
                         </form>
+                        <form method="POST" class="d-inline">
+                            <button type="submit" name="toggle_block" class="block-btn" <?php echo $is_blocking ? 'unfollow' : ''; ?>">
+                                <?php echo $is_blocking ? 'Unblock' : 'Block'; ?>
+                            </button>
+                        </form>
                     <?php endif; ?>
                 </div>
+                <p>@<?php echo htmlspecialchars($profile['email']); ?></p>
                 <div class="stats">
-                    <span><b><?php echo count($profile_posts); ?></b> posts</span>
-                    <span><b><?php echo $followers_count; ?></b> followers</span>
-                    <span><b><?php echo $following_count; ?></b> following</span>
+                    <button class="stas-btn"><span><b><?php echo count($profile_posts); ?></b> posts</span></button>
+                    <button class="stas-btn"><span><b><?php echo $followers_count; ?></b> followers</span></button>
+                    <button class="stas-btn"><span><b><?php echo $following_count; ?></b> following</span></button>
                 </div>
                 <div class="bio">
                     <strong><?php echo htmlspecialchars($profile['full_name'] ?? ''); ?></strong><br>
@@ -197,11 +256,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !
         <hr>
         <div class="posts-grid">
             <?php foreach ($profile_posts as $post): ?>
-                <img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post" class="post-img">
+                <img
+                    src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>"
+                    alt="Post"
+                    class="post-img post-clickable"
+                    data-img="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>"
+                    data-username="<?php echo htmlspecialchars($profile['name']); ?>"
+                    style="cursor: pointer;">
             <?php endforeach; ?>
         </div>
+
+        <!-- Single Modal -->
+        <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="postModalLabel"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="modalImage" src="" alt="Post" class="img-fluid" style="max-height: 70vh; width: auto;">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const images = document.querySelectorAll('.post-clickable');
+                const modal = document.getElementById('postModal');
+                const modalImage = document.getElementById('modalImage');
+                const modalTitle = document.getElementById('postModalLabel');
+
+                images.forEach(image => {
+                    image.addEventListener('click', function() {
+                        const imgSrc = this.getAttribute('data-img');
+                        const username = this.getAttribute('data-username');
+
+                        modalImage.src = imgSrc;
+                        modalTitle.textContent = `${username}'s Post`;
+
+                        const bootstrapModal = new bootstrap.Modal(modal);
+                        bootstrapModal.show();
+                    });
+                });
+            });
+        </script>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

@@ -106,4 +106,33 @@ function getSuggestedUsers($current_user_id, $limit = 5) {
     $stmt->close();
     return $users;
 }
+
+function isBlocking($blocker_id, $blocked_id) {
+    global $conn;
+    $query = "SELECT COUNT(*) FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $blocker_id, $blocked_id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_row()[0];
+    $stmt->close();
+    return $result > 0;
+}
+
+function toggleBlock($blocker_id, $blocked_id) {
+    global $conn;
+    
+    if (isBlocking($blocker_id, $blocked_id)) {
+        // Unblock
+        $query = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    } else {
+        // Block
+        $query = "INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)";
+    }
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $blocker_id, $blocked_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    return $success;
+}
 ?>
