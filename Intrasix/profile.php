@@ -3,179 +3,165 @@ session_start();
 include 'includes/dbh.php';
 include 'functions.php';
 
-if (!isset($_SESSION['name'])) {
-    header("Location: login.php");
-    exit;
-}
-
-// Get the username to view (from URL or current session)
-$view_username = $_GET['name'] ?? $_SESSION['name'];
+// Get current user (assuming session is active)
 $current_user = getUserByUsername($_SESSION['name']);
-$profile = getUserByUsername($view_username);
+
+// Determine profile to view
+$view_id = $_GET['id'] ?? null;
+$view_username = $_GET['name'] ?? null;
+
+if ($view_id) {
+    // Fetch profile by ID (from post link)
+    $query = "SELECT * FROM users WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $view_id);
+    $stmt->execute();
+    $profile = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+} elseif ($view_username) {
+    // Fetch profile by username (from search)
+    $profile = getUserByUsername($view_username);
+} else {
+    // Default to current user's profile
+    $profile = $current_user;
+}
 
 if (!$profile) {
     echo "User not found";
     exit;
 }
 
-$profile_posts = getPostById($profile['id']);
+$profile_posts = getPostsByUserId($profile['id']);
 $is_own_profile = $current_user['id'] === $profile['id'];
 $followers_count = getFollowersCount($profile['id']);
 $following_count = getFollowingCount($profile['id']);
 $is_following = !$is_own_profile && isFollowing($current_user['id'], $profile['id']);
 
-// Handle follow/unfollow and block actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['toggle_follow']) && !$is_own_profile) {
-        $success = toggleFollow($current_user['id'], $profile['id']);
-        if ($success) {
-            header("Location: profile.php?name=" . urlencode($view_username));
-            exit;
-        } else {
-            echo "Failed to update follow status.";
-        }
-    }
-    if (isset($_POST['block']) && !$is_own_profile) {
-        $success = blockUser($current_user['id'], $profile['id']);
-        if ($success) {
-            header("Location: profile.php?name=" . urlencode($view_username));
-            exit;
-        } else {
-            echo "Failed to block user.";
-        }
+// Handle follow/unfollow
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_follow']) && !$is_own_profile) {
+    $success = toggleFollow($current_user['id'], $profile['id']);
+    if ($success) {
+        header("Location: profile.php?id=" . $profile['id']);
+        exit;
     }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <title><?php echo htmlspecialchars($profile['name']); ?>'s Profile</title>
+    <title><?php echo htmlspecialchars($profile['username']); ?> | Intrasix</title>
     <style>
-        :root {
-            --primary-color: #6f42c1;
-            /* Purple as primary color */
-            --secondary-color: #6c757d;
-            --background-color: #f8f9fa;
-        }
-
         body {
-            background-color: var(--background-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            background-color: #fafafa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
         .profile-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 935px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
-
-        .profile-img {
-            border: 4px solid white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 44px;
         }
-
-        .serach {
-            border: 1px solid var(--primary-color);
-            /* Purple border for search input */
-            border-radius: 20px;
-            /* Rounded for consistency */
-            padding: 8px 15px;
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-right: 100px;
+            object-fit: cover;
+        }
+        .profile-info {
+            flex-grow: 1;
+        }
+        .username-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .username {
+            font-size: 28px;
+            font-weight: 300;
+            margin-right: 20px;
+        }
+        .follow-btn {
+            background-color:#9b59b6;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .follow-btn.unfollow {
+            background-color: #fff;
+            color: #262626;
+            border: 1px solid #dbdbdb;
+        }
+        .stats {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .stats span {
             font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
-
-        .serach-btn {
-            background-color: var(--primary-color) !important;
-            /* Solid purple background for search button */
-            border-color: var(--primary-color) !important;
-            /* Matching purple border */
-            color: white !important;
-            /* White text for contrast */
-            border-radius: 20px;
-            /* Rounded pill shape to match search input */
-            padding: 8px 15px;
-            /* Consistent padding with search input */
+        .stats span b {
+            font-weight: 600;
+        }
+        .bio {
             font-size: 16px;
-            /* Match search input font size */
-            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
-            /* Smooth transitions */
+            line-height: 24px;
         }
-
-        .serach-btn:hover {
-            background-color: #5a2d9e !important;
-            /* Darker purple on hover */
-            border-color: #5a2d9e !important;
-            /* Matching darker purple border */
-            color: white !important;
-            /* Maintain white text */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
         }
-
-        .serach:focus {
-            border-color: var(--primary-color);
-            /* Maintain purple on focus */
-            box-shadow: 0 0 5px rgba(111, 66, 193, 0.5);
-            /* Light purple shadow on focus */
-            outline: none;
+        .post-img {
+            width: 100%;
+            height: 293px;
+            object-fit: cover;
+            border-radius: 4px;
         }
-
-        .btn-primary,
-        .btn-danger {
-            background-color: var(--primary-color) !important;
-            /* Purple for buttons */
-            border-color: var(--primary-color) !important;
+        .navbar {
+            border-bottom: 1px solid #dbdbdb;
+            background-color: #fff;
         }
-
-        .btn-primary:hover,
-        .btn-danger:hover {
-            background-color: #5a2d9e !important;
-            /* Darker purple on hover */
-            border-color: #5a2d9e !important;
-        }
-
-        .nav-link {
-            color: #333 !important;
-            /* Ensure nav links remain readable */
+        .search-bar {
+            background-color: #efefef;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 15px;
+            width: 215px;
         }
     </style>
 </head>
-
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border">
-        <div class="container col-9 d-flex justify-content-between">
-            <div class="d-flex justify-content-between col-8 align-items-center">
-                <a class="navbar-brand" href="index.php">
-                    <img src="images/intrasix-logo.png" alt="Logo" width="70px" height="70px">
-                    <img src="images/intrasix.png" alt="Logo" width="70px" height="70px">
-                </a>
-                <form class="d-flex w-50" action="profile.php" method="GET">
-                    <input class="serach" type="search" name="username"
-                        placeholder="Search for someone..." aria-label="Search" required>
-                    <button class="serach-btn" type="submit">Search</button>
-                </form>
-            </div>
-            <ul class="navbar-nav mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link text-dark" href="index.php"><i class="bi bi-house-door-fill"></i></a></li>
-                <li class="nav-item"><a class="nav-link text-dark" href="post.php"><i class="bi bi-plus-square-fill"></i></a></li>
-                <li class="nav-item"><a class="nav-link text-dark" href="#"><i class="bi bi-bell-fill"></i></a></li>
-                <li class="nav-item"><a class="nav-link text-dark" href="inbox.php"><i class="bi bi-chat-right-dots-fill"></i></a></li>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="index.php">
+             
+                <a title="" href="#"><img src="images/intrasix-logo.png" alt="" width="70px" height="70px"></a>
+				<a title="" href="#"><img src="images/Name.png" alt="" width="70px" height="70px"></a>
+            </a>
+            <form class="d-flex mx-auto" action="profile.php" method="GET">
+                <input class="search-bar" type="search" name="username" placeholder="Search" required>
+            </form>
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="index.php"><i class="bi bi-house-door-fill"></i></a></li>
+                <li class="nav-item"><a class="nav-link" href="post.php"><i class="bi bi-plus-square-fill"></i></a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <img src="<?php echo htmlspecialchars($current_user['profile_pic'] ?? 'default.jpg'); ?>"
-                            alt="Profile" height="30" class="rounded-circle border">
+                        <img src="<?php echo htmlspecialchars($current_user['profile_pic']); ?>" alt="Profile" height="30" class="rounded-circle">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
-                        <li><a class="dropdown-item" href="#">Account Settings</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
+                        <li><a class="dropdown-item" href="profile.php">Profile</a></li>
                         <li><a class="dropdown-item" href="logout.php">Logout</a></li>
                     </ul>
                 </li>
@@ -183,62 +169,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </nav>
 
-    <div class="container col-9 rounded-0 my-4">
-        <div class="col-12 profile-container p-4 d-flex gap-5">
-            <div class="col-4 d-flex justify-content-end align-items-start">
-                <img src="<?php echo htmlspecialchars($profile['profile_pic'] ?? 'default.jpg'); ?>"
-                    class="profile-img rounded-circle my-3" style="height:170px;" alt="Profile">
-            </div>
-            <div class="col-8">
-                <div class="d-flex flex-column">
-                    <div class="d-flex gap-5 align-items-center">
-                        <span style="font-size: xx-large;"><?php echo htmlspecialchars($profile['name']); ?></span>
-                        <?php if (!$is_own_profile): ?>
-                            <div class="dropdown">
-                                <span class="text-dark" style="font-size:xx-large" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots"></i>
-                                </span>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-chat-fill"></i> Message</a></li>
-                                    <li>
-                                        <form method="POST">
-                                            <button type="submit" name="block" class="dropdown-item">
-                                                <i class="bi bi-x-circle-fill"></i> Block
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <span style="font-size: larger;" class="text-secondary mb-3">@<?php echo htmlspecialchars($profile['name']); ?></span>
-                    <div class="d-flex gap-2 align-items-center my-3">
-                        <a class="btn btn-sm btn-primary"><i class="bi bi-file-post-fill"></i> <?php echo count($profile_posts); ?> Posts</a>
-                        <a class="btn btn-sm btn-primary"><i class="bi bi-people-fill"></i> <?php echo $followers_count; ?> Followers</a>
-                        <a class="btn btn-sm btn-primary"><i class="bi bi-person-fill"></i> <?php echo $following_count; ?> Following</a>
-                    </div>
+    <div class="profile-container">
+        <div class="profile-header">
+            <img src="<?php echo htmlspecialchars($profile['profile_pic']); ?>" alt="Profile" class="profile-pic">
+            <div class="profile-info">
+                <div class="username-row">
+                    <h1 class="username"><?php echo htmlspecialchars($profile['name']); ?></h1>
                     <?php if (!$is_own_profile): ?>
-                        <form method="POST" class="d-flex gap-2 align-items-center my-1">
-                            <button type="submit" name="toggle_follow"
-                                class="btn btn-sm <?php echo $is_following ? 'btn-danger' : 'btn-primary'; ?>">
-                                <?php echo $is_following ? 'Unfollow' : 'Follow'; ?>
+                        <form method="POST">
+                            <button type="submit" name="toggle_follow" class="follow-btn <?php echo $is_following ? 'unfollow' : ''; ?>">
+                                <?php echo $is_following ? 'Following' : 'Follow'; ?>
                             </button>
                         </form>
                     <?php endif; ?>
                 </div>
+                <div class="stats">
+                    <span><b><?php echo count($profile_posts); ?></b> posts</span>
+                    <span><b><?php echo $followers_count; ?></b> followers</span>
+                    <span><b><?php echo $following_count; ?></b> following</span>
+                </div>
+                <div class="bio">
+                    <strong><?php echo htmlspecialchars($profile['full_name'] ?? ''); ?></strong><br>
+                    <?php echo htmlspecialchars($profile['bio'] ?? ''); ?>
+                </div>
             </div>
         </div>
-
-        <h3 class="border-bottom py-2 mt-4">Posts</h3>
-        <div class="gallery d-flex flex-wrap justify-content-center gap-3 mb-4">
+        <hr>
+        <div class="posts-grid">
             <?php foreach ($profile_posts as $post): ?>
-                <img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>"
-                    width="300px" height="300px" class="rounded" alt="Post">
+                <img src="images/posts/<?php echo htmlspecialchars($post['post_img']); ?>" alt="Post" class="post-img">
             <?php endforeach; ?>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

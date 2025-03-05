@@ -1,95 +1,109 @@
 <?php
-// includes/functions.inc.php
-require_once 'includes/dbh.php';
+include 'includes/dbh.php'; // Assuming $conn is your MySQLi connection
 
-function getUserByUsername(string $username): ?array {
+// Get user by username
+function getUserByUsername($username) {
     global $conn;
-    $stmt = $conn->prepare("SELECT * FROM users WHERE name = ?");
+    $query = "SELECT * FROM users WHERE name = ?";
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
     $stmt->close();
-    return $user ?: null;
+    return $user;
 }
-
-function getPostById(int $user_id): array {
+// Get posts by user ID
+function getPostsByUserId($user_id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
+    $query = "SELECT p.*, u.name AS name 
+              FROM posts p 
+              JOIN users u ON p.user_id = u.id 
+              WHERE p.user_id = ? 
+              ORDER BY p.created_at DESC";
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    $posts = [];
-    while ($row = $result->fetch_assoc()) {
-        $posts[] = $row;
-    }
+    $posts = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
     return $posts;
 }
 
-function getFollowersCount(int $user_id): int {
+
+
+// Get followers count
+function getFollowersCount($user_id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM follow_list WHERE following_id = ?");
+    $query = "SELECT COUNT(*) FROM follow_list WHERE following_id = ?";
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    $stmt->bind_result($count);
+    $stmt->fetch();
     $stmt->close();
-    return (int)$row['count'];
+    return $count;
 }
 
-function getFollowingCount(int $user_id): int {
+// Get following count
+function getFollowingCount($user_id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM follow_list WHERE follower_id = ?");
+    $query = "SELECT COUNT(*) FROM follow_list WHERE follower_id = ?";
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    $stmt->bind_result($count);
+    $stmt->fetch();
     $stmt->close();
-    return (int)$row['count'];
+    return $count;
 }
 
-function isFollowing(int $follower_id, int $following_id): bool {
+// Check if a user is following another user
+function isFollowing($follower_id, $following_id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM followers WHERE follower_id = ? AND following_id = ?");
+    $query = "SELECT COUNT(*) FROM follow_list WHERE follower_id = ? AND following_id = ?";
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $follower_id, $following_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $count = $result->fetch_assoc()['COUNT(*)'];
+    $stmt->bind_result($count);
+    $stmt->fetch();
     $stmt->close();
     return $count > 0;
 }
 
-function toggleFollow(int $follower_id, int $following_id): bool {
+// Toggle follow/unfollow
+function toggleFollow($follower_id, $following_id) {
     global $conn;
     if (isFollowing($follower_id, $following_id)) {
-        $stmt = $conn->prepare("DELETE FROM follow_list WHERE follower_id = ? AND following_id = ?");
+        $query = "DELETE FROM follow_list WHERE follower_id = ? AND following_id = ?";
     } else {
-        $stmt = $conn->prepare("INSERT INTO follow_list (follower_id, following_id) VALUES (?, ?)");
+        $query = "INSERT INTO follow_list (follower_id, following_id) VALUES (?, ?)";
     }
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $follower_id, $following_id);
     $success = $stmt->execute();
     $stmt->close();
     return $success;
 }
 
-function blockUser(int $blocker_id, int $blocked_id): bool {
+// Get suggested users (users not followed by the current user)
+function getSuggestedUsers($current_user_id, $limit = 5) {
     global $conn;
-    // Check if already blocked to avoid duplicates
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?");
-    $stmt->bind_param("ii", $blocker_id, $blocked_id);
+    $query = "SELECT u.* 
+              FROM users u 
+              WHERE u.id != ? 
+              AND u.id NOT IN (
+                  SELECT following_id 
+                  FROM followers 
+                  WHERE follower_id = ?
+              ) 
+              LIMIT ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("iii", $current_user_id, $current_user_id, $limit);
     $stmt->execute();
     $result = $stmt->get_result();
-    $count = $result->fetch_assoc()['COUNT(*)'];
+    $users = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-
-    if ($count == 0) {
-        $stmt = $conn->prepare("INSERT INTO blocked_users (blocker_id, blocked_id) VALUES (?, ?)");
-        $stmt->bind_param("ii", $blocker_id, $blocked_id);
-        $success = $stmt->execute();
-        $stmt->close();
-        return $success;
-    }
-    return true; // Already blocked, consider it a success
+    return $users;
 }
 ?>

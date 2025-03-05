@@ -32,7 +32,7 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="styles.css">
 	<!-- <link rel="stylesheet" href="colorstyle.php"> -->
 
-	
+
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -48,72 +48,65 @@ $id = $_SESSION['id'];
 		<div class="search-bar">
         <i class="uil uil-search"></i>
         <input type="search" id="searchInput" placeholder="Search by username" style="border: none;">
-    </div>
-
-    <!-- Container for search results -->
-    <div class="search-results" id="searchResults">
-        <!-- Results will be populated here -->
+        <div id="searchResults" class="search-results"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    $(document).ready(function() {
-        const searchInput = $('#searchInput');
-        const searchResults = $('#searchResults');
+        $(document).ready(function() {
+            $('#searchInput').on('input', function() {
+                const query = $(this).val().trim();
+                const $resultsContainer = $('#searchResults');
 
-        searchInput.on('input', function() {
-            const query = $(this).val().trim();
+                if (query.length < 1) {
+                    $resultsContainer.hide();
+                    return;
+                }
 
-            if (query.length > 0) {
                 $.ajax({
-                    url: 'search_users.php',
-                    method: 'POST',
-                    data: { search_query: query },
+                    url: 'search.php',
+                    method: 'GET',
+                    data: { q: query },
                     dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            let html = '<ul class="user-list">';
-                            if (response.users.length > 0) {
-                                response.users.forEach(function(user) {
-                                    html += `
-                                        <li>
-                                            <figure>
-                                                <img src="${user.profile_pic || 'images/default.jpg'}" alt="Profile">
-                                            </figure>
-                                            <div class="user-meta">
-                                                <a href="profile.php?id=${user.id}">${user.name}</a>
-                                            </div>
-                                        </li>
-                                    `;
-                                });
-                            } else {
-                                html += '<li>No users found.</li>';
-                            }
-                            html += '</ul>';
-                            searchResults.html(html).show();
+                    success: function(data) {
+                        $resultsContainer.empty();
+                        if (data.length > 0) {
+                            data.forEach(user => {
+                                const resultItem = `
+                                    <div class="result-item">
+                                        <img src="${user.profile_pic || 'default.jpg'}" alt="Profile">
+                                        <a href="profile.php?id=${user.id}">${user.username}</a>
+                                    </div>
+                                `;
+                                $resultsContainer.append(resultItem);
+                            });
+                            $resultsContainer.show();
                         } else {
-                            searchResults.html('<p>Error: ' + response.message + '</p>').show();
+                            $resultsContainer.hide();
                         }
                     },
                     error: function(xhr, status, error) {
-                        searchResults.html('<p>An error occurred while searching.</p>').show();
                         console.error('AJAX Error:', status, error);
                     }
                 });
-            } else {
-                searchResults.hide(); // Hide results when input is empty
-            }
-        });
-    });
-    </script>
+            });
 
+            // Hide results when clicking outside
+            $(document).on('click', function(event) {
+                if (!$(event.target).closest('.search-bar').length) {
+                    $('#searchResults').hide();
+                }
+            });
+        });
+    </script>
+    
 
 		</div><!-- responsive header -->
 
 		<div class="topbar stick">
 			<div class="logo">
-			    <a title="" href="#"><img src="images/intrasix-logo.png" alt="" width="70px" height="70px"></a>
-				<a title="" href="#"><img src="images/intrasix.png" alt="" width="70px" height="70px"></a>
+				<a title="" href="#"><img src="images/intrasix-logo.png" alt="" width="70px" height="70px"></a>
+				<a title="" href="#"><img src="images/Name.png" alt="" width="70px" height="70px"></a>
 			</div>
 
 			<div class="top-area">
@@ -502,7 +495,7 @@ $id = $_SESSION['id'];
 													<a href="video.php" title="">videos</a>
 												</li>
 												<li>
-												<i class="fa-solid fa-palette"></i>
+													<i class="fa-solid fa-palette"></i>
 													<a href="themes.php" title="">Themes</a>
 												</li>
 												<li>
@@ -677,10 +670,11 @@ $id = $_SESSION['id'];
 											});
 										</script>
 										<style>
-											.btn{
-												background-color:#9b59b6;
+											.btn {
+												background-color: #9b59b6;
 												color: white;
 											}
+
 											.follow-btn {
 												transition: all 0.3s ease;
 											}
@@ -993,7 +987,7 @@ $id = $_SESSION['id'];
 																}
 															</script>
 
-                                                           <style>
+															<style>
 																.container {
 																	max-width: 1200px;
 																	margin: 0 auto;
@@ -1057,14 +1051,14 @@ $id = $_SESSION['id'];
 
 																.comment-submit {
 																	padding: 8px 16px;
-																	
+
 																	color: white;
 																	border: none;
 																	border-radius: 4px;
 																	cursor: pointer;
 																}
 
-																
+
 
 																.comment-toggle {
 																	cursor: pointer;
@@ -1074,7 +1068,7 @@ $id = $_SESSION['id'];
 
 																.comment-toggle i {
 																	margin-right: 5px;
-																	color: #6f42c1; 
+																	color: #6f42c1;
 																}
 
 																.comment-toggle ins {
@@ -1152,32 +1146,33 @@ $id = $_SESSION['id'];
 										<?php endforeach; ?>
 									</div>
 								</div>
-<?php
-function getFollowers() {
-    global $conn;
-    
-    if (!isset($_SESSION['id'])) {
-        return []; // Return empty array if not logged in
-    }
-    
-    $current_user = $_SESSION['id'];
-    
-    $query = "
+								<?php
+								function getFollowers()
+								{
+									global $conn;
+
+									if (!isset($_SESSION['id'])) {
+										return []; // Return empty array if not logged in
+									}
+
+									$current_user = $_SESSION['id'];
+
+									$query = "
         SELECT u.id, u.name, u.profile_pic
         FROM users u
         INNER JOIN follow_list fl ON u.id = fl.follower_id
         WHERE fl.following_id = ?
         ORDER BY fl.created_at DESC
     ";
-    
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $current_user);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    return $result->fetch_all(MYSQLI_ASSOC);
-}
-?>
+
+									$stmt = $conn->prepare($query);
+									$stmt->bind_param("i", $current_user);
+									$stmt->execute();
+									$result = $stmt->get_result();
+
+									return $result->fetch_all(MYSQLI_ASSOC);
+								}
+								?>
 
 
 								<div class="col-lg-3">

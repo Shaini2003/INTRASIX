@@ -153,3 +153,61 @@
 .like.liked i.ti-heart {
     animation: likeAnimation 0.3s ease;
 }
+
+    .search-bar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background-color: #efefef;
+        border-radius: 8px;
+        padding: 7px 15px;
+        width: 215px;
+        margin: 0 auto;
+    }
+    .search-bar i {
+        margin-right: 10px;
+        color: #8e8e8e;
+    }
+    .search-bar input {
+        background: none;
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 14px;
+    }
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #dbdbdb;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .search-results .result-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    .search-results .result-item:hover {
+        background-color: #fafafa;
+    }
+    .search-results img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+    .search-results a {
+        text-decoration: none;
+        color: #262626;
+        font-weight: 600;
+        font-size: 14px;
+    }
