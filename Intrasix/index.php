@@ -78,38 +78,43 @@ $id = $_SESSION['id'];
 			}
 		});
 	});
-
 	document.addEventListener('DOMContentLoaded', function() {
 		const messagesLink = document.getElementById('messagesLink');
 		const messagesDropdown = document.getElementById('messagesDropdown');
-		const messagesCount = document.getElementById('messagesCount');
+		const messagesCount = document.getElementById('unreadMessagesCount');
 
 		function loadMessages() {
 			fetch('get_messages.php')
-				.then(response => response.text())
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok: ' + response.statusText);
+					}
+					return response.text();
+				})
 				.then(html => {
+					console.log('Messages Response:', html); // Debug line
 					messagesDropdown.innerHTML = html;
-					const count = html.match(/(\d+) New Messages/);
-					messagesCount.textContent = count ? count[1] : '0';
+					const countMatch = html.match(/(\d+) New Messages/);
+					const count = countMatch ? countMatch[1] : '0';
+					messagesCount.textContent = count;
+					messagesCount.style.display = count > 0 ? 'inline' : 'none';
 				})
 				.catch(error => {
-					console.error('Error:', error);
+					console.error('Fetch Error:', error); // Debug line
 					messagesDropdown.innerHTML = '<span>Error loading messages</span>';
 				});
 		}
 
-		// Load initially
 		loadMessages();
+		setInterval(loadMessages, 30000);
 
-		// Toggle dropdown
 		messagesLink.addEventListener('click', function(e) {
 			e.preventDefault();
-			messagesDropdown.style.display =
-				messagesDropdown.style.display === 'block' ? 'none' : 'block';
-			if (messagesDropdown.style.display === 'block') loadMessages();
+			const isVisible = messagesDropdown.style.display === 'block';
+			messagesDropdown.style.display = isVisible ? 'none' : 'block';
+			if (!isVisible) loadMessages();
 		});
 
-		// Hide when clicking outside
 		document.addEventListener('click', function(e) {
 			if (!messagesLink.contains(e.target) && !messagesDropdown.contains(e.target)) {
 				messagesDropdown.style.display = 'none';
@@ -182,7 +187,6 @@ $id = $_SESSION['id'];
 						<div class="dropdowns" id="messagesDropdown">
 							<span>Loading...</span>
 						</div>
-					</li>
 					</li>
 				</ul>
 

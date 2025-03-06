@@ -55,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['theme_color'])) {
     <div class="palette-container">
         <input type="hidden" name="theme_color" id="selectedColor" value="<?= $_SESSION['theme_color'] ?>">
         
+        <div class="color-box" style="background:white" onclick="selectColor('white')"></div>
         <div class="color-box" style="background:#3498db" onclick="selectColor('#3498db')"></div>
         <div class="color-box" style="background:#e74c3c" onclick="selectColor('#e74c3c')"></div>
         <div class="color-box" style="background:#2ecc71" onclick="selectColor('#2ecc71')"></div>
         <div class="color-box" style="background:#f1c40f" onclick="selectColor('#f1c40f')"></div>
         <div class="color-box" style="background:#9b59b6" onclick="selectColor('#9b59b6')"></div>
 		<div class="color-box" style="background:#070708" onclick="selectColor('#070708')"></div>
-        <div class="color-box" style="background:white" onclick="selectColor('white')"></div>
-
+       
 
         <br>
         <button type="submit">Apply Theme</button>

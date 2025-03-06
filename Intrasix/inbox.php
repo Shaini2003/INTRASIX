@@ -1,8 +1,7 @@
-<?php 
+<?php
 session_start();
 include 'includes/dbh.php'; // Database connection
 
-// Ensure user is logged in
 if (!isset($_SESSION['id'])) {
     die("Unauthorized access!");
 }
@@ -17,6 +16,17 @@ $friends = $stmt->get_result();
 
 // Set default chat user (if not selected)
 $chat_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
+
+// Mark messages as read when viewing the chat
+if ($chat_user_id) {
+    $stmt = $conn->prepare("
+        UPDATE chat 
+        SET is_read = 1 
+        WHERE to_user_id = ? AND from_user_id = ? AND is_read = 0
+    ");
+    $stmt->bind_param("ii", $current_user_id, $chat_user_id);
+    $stmt->execute();
+}
 
 // Fetch chat messages
 $chatMessages = null;
@@ -38,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
     $message = trim($_POST['chat_message']);
     if (!empty($message) && $chat_user_id) {
         $stmt = $conn->prepare("
-            INSERT INTO chat (from_user_id, to_user_id, start_time, msg) 
-            VALUES (?, ?, NOW(), ?)
+            INSERT INTO chat (from_user_id, to_user_id, start_time, msg, is_read) 
+            VALUES (?, ?, NOW(), ?, 0)
         ");
         $stmt->bind_param("iis", $current_user_id, $chat_user_id, $message);
         $stmt->execute();
@@ -50,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -144,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
         }
         .received {
             align-self: flex-start;
-            background:rgb(255, 255, 255);
+            background: rgb(255, 255, 255);
             border: 1px solid #ddd;
         }
         .chat-input {
@@ -175,12 +184,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
         }
     </style>
 </head>
-
 <body>
-
-<!-- Chat List -->
 <div class="chat-list">
-<a href="index.php" style="text-decoration: none; font-weight: bold;">←Back</a>
+    <a href="index.php" style="text-decoration: none; font-weight: bold;">←Back</a>
     <h3>Chat List</h3>
     <ul>
         <?php while ($friend = $friends->fetch_assoc()): ?>
@@ -195,13 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
     </ul>
 </div>
 
-<!-- Chat Box -->
 <div class="chat-container">
     <?php if ($chat_user_id): ?>
         <div class="chat-box">
             <div class="chat-header">
                 <?php
-                // Get the selected user's name for the header
                 $stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
                 $stmt->bind_param("i", $chat_user_id);
                 $stmt->execute();
@@ -229,6 +233,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['send_message'])) {
         <p style="text-align:center; padding:20px;">Select a user to start chatting...</p>
     <?php endif; ?>
 </div>
-
 </body>
 </html>
