@@ -185,7 +185,7 @@ $id = $_SESSION['id'];
 							<span id="unreadMessagesCount">0</span>
 						</a>
 						<div class="dropdowns" id="messagesDropdown">
-							<span>Loading...</span>
+							<!-- Messages will be loaded here -->
 						</div>
 					</li>
 				</ul>

@@ -16,13 +16,13 @@ function send_otp($to, $subject, $otp) {
       $mail->isSMTP();
       $mail->Host       = 'smtp.gmail.com';
       $mail->SMTPAuth   = true;
-      $mail->Username   = 'shinitharushika2020@gmail.com'; 
-      $mail->Password   = 'isfl knln mtbj yhqt'; // Use an App Password, NOT your Gmail password
+      $mail->Username   = 'intrasix06@gmail.com'; 
+      $mail->Password   = 'upxq zhpv fmsm mohk'; // Use an App Password, NOT your Gmail password
       $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
       $mail->Port       = 587;
 
       // Recipients
-      $mail->setFrom('shinitharushika2020@gmail.com', 'OTP Verification');
+      $mail->setFrom('intrasix06@gmail.com', 'OTP Verification');
       $mail->addAddress($to);
 
       // Email Content
