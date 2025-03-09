@@ -1,21 +1,42 @@
 <?php
 session_start();
+include 'config.php';
 
-// Check if the user ID is set and valid
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
-    $user_id = $_POST['user_id'];
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: index.php");
+    exit();
+}
 
-    // Check if the user is already blocked
-    if (isset($_SESSION['blocked_users'][$user_id])) {
-        // Unblock the user
-        unset($_SESSION['blocked_users'][$user_id]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+    $user_id = intval($_POST['user_id']);
+    $blocker_id = $_SESSION['admin_id'];
+
+    $query = "SELECT COUNT(*) as count FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $blocker_id, $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    $is_blocked = $result['count'] > 0;
+    $stmt->close();
+
+    if ($is_blocked) {
+        $query = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $blocker_id, $user_id);
     } else {
-        // Block the user
-        $_SESSION['blocked_users'][$user_id] = true;
+        $query = "INSERT INTO blocked_users (blocker_id, blocked_id, created_at) VALUES (?, ?, NOW())";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $blocker_id, $user_id);
     }
 
-    // Redirect back to the main dashboard
-    header("Location: main.php");
-    exit;
+    if ($stmt->execute()) {
+        header("Location: main.php");
+        exit;
+    } else {
+        echo "Error updating block status.";
+    }
+    $stmt->close();
 }
+
+$conn->close();
 ?>

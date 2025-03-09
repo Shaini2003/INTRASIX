@@ -134,7 +134,43 @@ function userLikedPost($post_id, $user_id) {
 
     return $liked;
 }
+function isUserBlocked($mysqli, $user_id) {
+    try {
+        // Query to check if the user is blocked by an admin
+        $query = 'SELECT COUNT(*) as count FROM blocked_users WHERE blocked_id = ? AND blocker_id IN (SELECT id FROM users WHERE role = "admin")';
+        
+        $stmt = $mysqli->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $mysqli->error);
+        }
 
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+
+        return $row['count'] > 0;
+    } catch (Exception $e) {
+        error_log("Error in isUserBlocked: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Function to enforce the block and redirect
+function enforceBlock($mysqli, $user_id) {
+    if (isUserBlocked($mysqli, $user_id)) {
+        // Optionally destroy the session to log the user out
+        session_destroy();
+        
+        // Display block message and exit
+        echo "<div style='text-align: center; padding: 50px;'>
+                <h2>Access Denied</h2>
+                <p>Your account has been blocked by an admin. You cannot access this website.</p>
+              </div>";
+        exit();
+    }
+}
 
 function getUserrByUsername(string $username): ?array {
     global $conn;

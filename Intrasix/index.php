@@ -158,13 +158,44 @@ $id = $_SESSION['id'];
 				</ul>
 
 				<ul>
-					<li>
-						<div class="search-bar">
-							<i class="uil uil-search"></i>
-							<input type="search" id="searchInput" placeholder="Search by username" style="border: none;">
-							<div id="searchResults" class="search-results"></div>
-						</div>
-					</li>
+					<!-- search bar-->
+					<!-- search bar -->
+<li>
+    <input type="text" id="searchBox" placeholder="Search for a user...">
+    <button onclick="searchUser()">Search</button>
+    <div id="result"></div>
+
+    <script>
+        async function searchUser() {
+            let query = document.getElementById("searchBox").value;
+            if (!query) return;
+
+            try {
+                // Corrected fetch URL with template literals
+                let response = await fetch(`search.php?name=${encodeURIComponent(query)}`);
+                let data = await response.json();
+
+                let resultDiv = document.getElementById("result");
+
+                if (data.status === "success") {
+                    resultDiv.innerHTML = `
+                       
+                        <p><strong></strong> ${data.name}</p>
+                     
+                        <img src="${data.profile_pic}" alt="Profile Picture" width="50">
+                    `;
+                } else {
+                    // Fixed template literal syntax in error message
+                    resultDiv.innerHTML = `<p>${data.message}</p>`;
+                }
+            } catch (error) {
+                // Added error handling
+                resultDiv.innerHTML = `<p>Error: Could not fetch user data</p>`;
+                console.error('Fetch error:', error);
+            }
+        }
+    </script>
+</li>
 				</ul>
 
 				<ul class="setting-area">
@@ -485,17 +516,14 @@ $id = $_SESSION['id'];
 												<i class="fa-solid fa-palette"></i>
 												<a href="themes.php" title="">Themes</a>
 											</li>
-											<li>
-												<i class="ti-bell"></i>
-												<a href="notifications.html" title="">Notifications</a>
-											</li>
+											
 											<li>
 												<i class="ti-bell"></i>
 												<a href="review.php" title="">Reviews</a>
 											</li>
 											<li>
 												<i class="fa-brands fa-bots"></i>
-												<a href="timeline-photos.html" title="">Chat Bot</a>
+												<a href="chatbot.html" title="">Chat Bot</a>
 											</li>
 											<li>
 												<i class="ti-power-off"></i>
