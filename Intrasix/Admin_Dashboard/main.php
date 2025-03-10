@@ -77,6 +77,7 @@ $conn->close();
                 <a href="main.php" class="list-group-item list-group-item-action bg-dark text-white">Dashboard</a>
                 <a href="edit_profile.php" class="list-group-item list-group-item-action bg-dark text-white">Edit Profile</a>
                 <a href="view_profile.php" class="list-group-item list-group-item-action bg-dark text-white">View Profile</a>
+                <a href="view_reviews.php" class="list-group-item list-group-item-action bg-dark text-white">View Reviews</a>
             </div>
         </div>
         <div id="page-content-wrapper" class="w-100 p-3">
