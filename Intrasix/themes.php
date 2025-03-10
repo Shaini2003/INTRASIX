@@ -3,7 +3,7 @@ session_start();
 
 // Default color if not set
 if (!isset($_SESSION['theme_color'])) {
-    $_SESSION['theme_color'] = "#3498db"; // Default blue
+    $_SESSION['theme_color'] = "white"; // Default blue
 }
 
 // Handle color selection
