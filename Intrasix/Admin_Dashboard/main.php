@@ -176,7 +176,7 @@ $conn->close();
                                     <a href='user_profile.php?email=" . urlencode($user_email) . "' class='btn btn-success'>Login User</a>
                                     <form action='verify_user.php' method='POST' style='display:inline-block;'>
                                         <input type='hidden' name='user_id' value='{$user_id}'>
-                                        <button type='submit' class='{$verify_button_class} btn-sm me-2'>{$verify_button_text}</button>
+                                       
                                     </form>
                                     <form action='toggle_block.php' method='POST' style='display:inline-block;'>
                                         <input type='hidden' name='user_id' value='{$user_id}'>

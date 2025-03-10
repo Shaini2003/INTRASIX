@@ -33,6 +33,7 @@ $id = $_SESSION['id'];
 	<link rel="stylesheet" href="colorstyle.php">
 
 
+
 	<!--ICONSCOUT CDN-->
 	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -164,7 +165,6 @@ $id = $_SESSION['id'];
     <input type="text" id="searchBox" placeholder="Search for a user...">
     <button onclick="searchUser()">Search</button>
     <div id="result"></div>
-
     <script>
         async function searchUser() {
             let query = document.getElementById("searchBox").value;
@@ -527,7 +527,7 @@ $id = $_SESSION['id'];
 											</li>
 											<li>
 												<i class="ti-power-off"></i>
-												<a href="landing.html" title="">Logout</a>
+												<a href="logout.php" title="">Logout</a>
 											</li>
 										</ul>
 									</div><!-- Shortcuts -->
