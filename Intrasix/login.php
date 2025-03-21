@@ -60,7 +60,7 @@
                     <div class="other-ways">
                         
                         <div class="forget-password">
-                            <a href="otp.php" style="color: #8e44ad; font-weight: bold;">
+                            <a href="forgot_password.php" style="color: #8e44ad; font-weight: bold;">
                                 Forgot password?
                             </a>
                         </div>

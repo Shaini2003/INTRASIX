@@ -6,7 +6,7 @@ include 'includes/functions.inc.php';
 
 global $posts;
 if (!isset($_SESSION['id'])) {
-	header("Location: otp.php"); // Redirect to OTP page if not logged in
+	header("Location: login.php"); // Redirect to OTP page if not logged in
 	exit();
 }
 
@@ -192,7 +192,7 @@ $id = $_SESSION['id'];
 
 
 					<?php if (isset($_SESSION["id"])): ?>
-						<li><a href="view_profile.php" title="View Profile"><?php echo $_SESSION['name']; ?></a></li>
+						<li><a href="view_profile.php" title="View Profile"></a></li>
 						<li><a href="logout.php" title="Logout">Logout</a></li>
 					<?php else: ?>
 						<li><a href="login.php" title="Login">Login</a></li>
@@ -1066,12 +1066,13 @@ $id = $_SESSION['id'];
 															.comment {
 																display: flex;
 																align-items: flex-start;
-																color: black;
 																/* Align items at the top for better stacking on small screens */
 																margin-bottom: 10px;
 																width: 100%;
 															}
-
+                                                            .comment p{
+																color: black;
+															}
 															.comment img {
 																width: 40px;
 																height: 40px;
@@ -1082,26 +1083,23 @@ $id = $_SESSION['id'];
 															}
 
 															.comment div {
-																background:rgb(235, 199, 232);
-																color: black;
+																background: #f1f1f1;
 																padding: 8px;
 																border-radius: 5px;
 																flex-grow: 1;
+                                                                color: black;
 																/* Allow text to grow and fill available space */
 																word-wrap: break-word;
 																/* Ensure long text wraps */
 																max-width: calc(100% - 50px);
 																/* Adjust for image and margin */
 															}
-															.comment p{
-																color: black;
-															}
+
 															.comment-form {
 																display: flex;
 																gap: 10px;
 																margin-top: 10px;
 																width: 100%;
-																color: black;
 																flex-wrap: wrap;
 																/* Allow wrapping on small screens */
 															}
@@ -1110,7 +1108,6 @@ $id = $_SESSION['id'];
 																flex-grow: 1;
 																padding: 8px;
 																border: 1px solid #ccc;
-																color: black;
 																border-radius: 4px;
 																min-width: 200px;
 																/* Minimum width for input on small screens */

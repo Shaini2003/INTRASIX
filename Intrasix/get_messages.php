@@ -8,7 +8,6 @@ if (!isset($_SESSION['id'])) {
 }
 
 $current_user_id = $_SESSION['id'];
-echo "Debug: Current User ID = $current_user_id<br>"; // Debug line
 
 // Fetch unread messages count and details
 $stmt = $conn->prepare("
@@ -26,27 +25,36 @@ $result = $stmt->get_result();
 $messages = $result->fetch_all(MYSQLI_ASSOC);
 $unread_count = count($messages);
 
-echo "Debug: Unread Count = $unread_count<br>"; // Debug line
-echo "Debug: Messages = " . print_r($messages, true) . "<br>"; // Debug line
-
 // Output HTML for the dropdown
-if ($unread_count > 0) {
-    echo "<span>{$unread_count} New Messages</span><ul>";
-    foreach ($messages as $message) {
-        $profile_pic = htmlspecialchars($message['profile_pic'] ?? 'images/default.jpg');
-        $sender_name = htmlspecialchars($message['name']);
-        $msg_preview = htmlspecialchars(substr($message['msg'], 0, 30)) . (strlen($message['msg']) > 30 ? '...' : '');
-        $from_user_id = $message['from_user_id'];
+$output = "<span>$unread_count New Messages</span>";
+$output .= '<ul class="drops-menu">';
 
-        echo "<li>
-            <a href='inbox.php?user_id={$from_user_id}' title='View Chat'>
-                <img src='{$profile_pic}' alt='{$sender_name}' style='width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;'>
-                <strong>{$sender_name}</strong>: {$msg_preview}
-            </a>
-        </li>";
+if ($unread_count > 0) {
+    foreach ($messages as $message) {
+        $profile_pic = htmlspecialchars($message['profile_pic'] ?? 'images/default.jpg', ENT_QUOTES, 'UTF-8');
+        $sender_name = htmlspecialchars($message['name'], ENT_QUOTES, 'UTF-8');
+        $msg_preview = htmlspecialchars(substr($message['msg'], 0, 30), ENT_QUOTES, 'UTF-8') . (strlen($message['msg']) > 30 ? '...' : '');
+        $from_user_id = (int)$message['from_user_id'];
+
+        $output .= "<li>";
+        $output .= "<a href='inbox.php?user_id=$from_user_id' title='View Chat'>";
+        $output .= "<img src='$profile_pic' alt='$sender_name'>";
+        $output .= "<div class='mesg-meta'>";
+        $output .= "<h6>$sender_name</h6>";
+        $output .= "<span>$msg_preview</span>";
+        $output .= "</div>";
+        $output .= "</a>";
+        $output .= "</li>";
     }
-    echo "</ul>";
 } else {
-    echo "<span>No new messages</span>";
+    $output .= "<li><span>No new messages</span></li>";
 }
+
+$output .= "</ul>";
+$output .= "<a href='inbox.php' title='' class='more-mesg'>View All Messages</a>";
+
+echo $output;
+
+$stmt->close();
+$conn->close();
 ?>

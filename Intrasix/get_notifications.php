@@ -3,7 +3,7 @@ session_start();
 include 'includes/dbh.php';
 
 if (!isset($_SESSION['id'])) {
-    echo "User not logged in";
+    echo "<span>User not logged in</span>";
     exit;
 }
 
@@ -44,32 +44,41 @@ $count_result = mysqli_stmt_get_result($count_stmt);
 $unread_count = mysqli_fetch_assoc($count_result)['unread'];
 
 // Output notifications as HTML
-echo "<span>$unread_count New Notifications</span>";
-echo '<ul class="drops-menu">';
+$output = "<span>$unread_count New Notifications</span>";
+$output .= '<ul class="drops-menu">';
 foreach ($notifications as $notif) {
     $message = $notif['type'] === 'like' ? "liked your post" : "commented on your post";
     $tag_class = $notif['is_read'] ? '' : 'green';
-    echo "<li>";
-    echo "<a href='profile.php?id={$notif['post_id']}' title=''>";
-    echo "<img src='{$notif['profile_pic']}' alt=''>";
-    echo "<div class='mesg-meta'>";
-    echo "<h6>{$notif['actor_name']}</h6>";
-    echo "<span>$message</span>";
-    echo "<i>{$notif['time_ago']}</i>";
-    echo "</div>";
-    echo "</a>";
+    $output .= "<li>";
+    $output .= "<a href='profile.php?id={$notif['post_id']}' title=''>";
+    $output .= "<img src='{$notif['profile_pic']}' alt=''>";
+    $output .= "<div class='mesg-meta'>";
+    $output .= "<h6>{$notif['actor_name']}</h6>";
+    $output .= "<span>$message</span>";
+    $output .= "<i>{$notif['time_ago']}</i>";
+    $output .= "</div>";
+    $output .= "</a>";
     if (!$notif['is_read']) {
-        echo "<span class='tag $tag_class'>New</span>";
+        $output .= "<span class='tag $tag_class'>New</span>";
     }
-    echo "</li>";
+    $output .= "</li>";
 }
-echo "</ul>";
-echo "<a href='notifications.php' title='' class='more-mesg'>view more</a>";
+$output .= "</ul>";
+$output .= "<a href='notifications.php' title='' class='more-mesg'>view more</a>";
 
-// Time ago function
+echo $output;
+
+// Updated timeAgo function to handle negative timestamps
 function timeAgo($datetime) {
     $time = strtotime($datetime);
-    $diff = time() - $time;
+    $current_time = time();
+    
+    // If the timestamp is in the future, return "just now"
+    if ($time > $current_time) {
+        return "just now";
+    }
+
+    $diff = $current_time - $time;
     if ($diff < 60) return "$diff sec ago";
     $diff = round($diff / 60);
     if ($diff < 60) return "$diff min ago";

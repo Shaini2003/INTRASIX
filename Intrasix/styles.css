@@ -399,73 +399,102 @@
 }
 
 
-.dropdowns {
-    position: absolute;
-    top: 40px;
-    /* Adjust based on your topbar height */
-    right: 0;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    /* Fixed width, adjustable */
-    max-height: 400px;
-    /* Maximum height before scrolling */
-    overflow-y: auto;
-    /* Enable vertical scrolling if content exceeds max-height */
-    display: none;
-    /* Hidden by default */
-    z-index: 1000;
-    /* Ensure it stays above other elements */
-    padding: 10px;
-    /* Add internal padding */
-    box-sizing: border-box;
-    /* Include padding in width/height calculations */
+.notification-area {
+    position: relative;
 }
 
-.dropdowns ul {
+.dropdowns {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 300px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none; /* Initially hidden */
+    padding: 10px 0;
+}
+
+.dropdowns.active {
+    display: block; /* Show when active */
+}
+
+.dropdowns > span {
+    display: block;
+    padding: 10px 15px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px solid #eee;
+}
+
+.drops-menu {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-.dropdowns li {
-    padding: 10px;
+.drops-menu li {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
     border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
 }
 
-.dropdowns li:last-child {
-    border-bottom: none;
-}
-
-.dropdowns li a {
+.drops-menu li a {
     display: flex;
     align-items: center;
-    color: #333;
     text-decoration: none;
-    width: 100%;
+    color: #333;
+    flex: 1;
 }
 
-.dropdowns li a:hover {
-    background: #f5f5f5;
-    border-radius: 5px;
-}
-
-.dropdowns li img {
-    width: 30px;
-    height: 30px;
+.drops-menu li img {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     margin-right: 10px;
-    object-fit: cover;
 }
 
-.dropdowns span {
-    display: block;
-    padding: 10px;
-    text-align: center;
-    color: #666;
+.mesg-meta {
+    flex: 1;
+}
+
+.mesg-meta h6 {
+    margin: 0;
     font-size: 14px;
+    color: #333;
+}
+
+.mesg-meta span {
+    display: block;
+    font-size: 12px;
+    color: #666;
+}
+
+.mesg-meta i {
+    display: block;
+    font-size: 11px;
+    color: #999;
+}
+
+.tag.green {
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.more-mesg {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 12px;
 }

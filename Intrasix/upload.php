@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->bind_param("ss", $title, basename($targetFile));
 
                 if ($stmt->execute()) {
-                    header("Location: index.php?upload=success");
+                    header("Location: video.php?upload=success");
                     exit();
                 } else {
                     echo "Database error: " . $conn->error;

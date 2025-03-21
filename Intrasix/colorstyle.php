@@ -2,7 +2,7 @@
 session_start();
 header("Content-type: text/css");
 
-$theme_color = isset($_SESSION['theme_color']) ? $_SESSION['theme_color'] : "#3498db";
+$theme_color = isset($_SESSION['theme_color']) ? $_SESSION['theme_color'] : "white";
 ?>
 
 /* Apply the theme color globally */

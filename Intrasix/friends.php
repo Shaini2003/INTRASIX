@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow'])) {
     exit();
 }
 
-// Handle unfollow action
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow back'])) {
+// Handle followback action
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow'])) {
     $following_id = intval($_POST['following_id']);
     $stmt = $conn->prepare("
         INSERT INTO follow_list (follower_id, following_id, created_at) 
@@ -289,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow back'])) {
 <body>
 <!-- Followers List -->
 <div class="followers-list">
-    <h3>Followers</h3>
+    <h3>My Followers</h3>
     <ul>
         <?php while ($follower = $followers->fetch_assoc()): ?>
             <li>
@@ -300,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow back'])) {
                 </div>
                 <form method="post">
                     <input type="hidden" name="following_id" value="<?= $follower['id'] ?>">
-                    <button type="submit" name="unfollow" class="unfollow-btn">Unfollow</button>
+                    <button type="submit" name="follow" class="follow-btn">Follow</button>
                 </form>
             </li>
         <?php endwhile; ?>
@@ -327,6 +327,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['follow back'])) {
         <?php endwhile; ?>
     </ul>
 </div>
+
+
 
 </body>
 </html>
