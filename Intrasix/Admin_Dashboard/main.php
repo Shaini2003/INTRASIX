@@ -169,7 +169,7 @@ $conn->close();
                         echo "<tr>
                                 <td>#{$count}</td>
                                 <td>
-                                    <img src='{$image_path}' alt='Profile Picture' class='profile-pic' width='20' height='20'>
+                                    
                                     {$user_name} - @{$user_email}
                                 </td>
                                 <td>
